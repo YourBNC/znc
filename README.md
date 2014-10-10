@@ -1,3 +1,8 @@
+YourBNC's custom version of ZNC!
+[Our latest BNC software is now opensource!]
+https://yourbnc.co.uk
+
+
 #[![ZNC](http://wiki.znc.in/skins/common/images/wiki.png)](http://znc.in) - An advanced IRC bouncer
 
 ## Table of contents
