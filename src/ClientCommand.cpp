@@ -498,6 +498,13 @@ void CClient::UserCommand(CString& sLine) {
 		PutStatus("Total: " + CString(vChans.size()) + " - Joined: " + CString(uNumJoined) +
 			" - Detached: " + CString(uNumDetached) + " - Disabled: " + CString(uNumDisabled));
 	} else if (sCommand.Equals("ADDNETWORK")) {
+
+		if (!m_pUser->IsAdmin()) {
+			PutStatus("Error: You are not allowed to manually add networks.");
+			PutStatus("Join #YourBNC over at irc.yourbnc.co.uk and run ?addnet to get information on how to add a network");
+			return;
+		}
+
 		if (!m_pUser->IsAdmin() && !m_pUser->HasSpaceForNewNetwork()) {
 			PutStatus("Network number limit reached. Ask an admin to increase the limit for you, or delete unneeded networks using /znc DelNetwork <name>");
 			return;
@@ -523,6 +530,12 @@ void CClient::UserCommand(CString& sLine) {
 		}
 	} else if (sCommand.Equals("DELNETWORK")) {
 		CString sNetwork = sLine.Token(1);
+
+		if (!m_pUser->IsAdmin()) {
+			PutStatus("You are not allowed to manually remove networks.");
+			PutStatus("Join #YourBNC over at irc.yourbnc.co.uk and ask a staff member to remove the network.");
+			return;
+		}
 
 		if (sNetwork.empty()) {
 			PutStatus("Usage: DelNetwork <name>");
@@ -682,6 +695,11 @@ void CClient::UserCommand(CString& sLine) {
 	} else if (sCommand.Equals("ADDSERVER")) {
 		CString sServer = sLine.Token(1);
 
+		if (!m_pUser->IsAdmin()) {
+			PutStatus("Error: You are not allowed to add servers.");
+			return;
+		}
+
 		if (!m_pNetwork) {
 			PutStatus("You must be connected with a network to use this command");
 			return;
@@ -702,6 +720,10 @@ void CClient::UserCommand(CString& sLine) {
 		if (!m_pNetwork) {
 			PutStatus("You must be connected with a network to use this command");
 			return;
+		}
+
+		if (!m_pUser->IsAdmin()) {
+			PutStatus("Error: You are not allowed to remove servers.");
 		}
 
 		CString sServer = sLine.Token(1);
