@@ -313,7 +313,7 @@ class CAdminMod : public CModule {
 				pUser->SetBindHost(sValue);
 				PutModule("BindHost = " + sValue);
 			} else {
-				PutModule("Access denied!");
+				PutModule("You are not allowed to change your bindhost.");
 			}
 		}
 		else if (sVar == "multiclients") {
@@ -579,7 +579,7 @@ class CAdminMod : public CModule {
 				pNetwork->SetBindHost(sValue);
 				PutModule("BindHost = " + sValue);
 			} else {
-				PutModule("Access denied!");
+				PutModule("You are not allowed to change your bindhost.");
 			}
 		} else if (sVar.Equals("floodrate")) {
 			pNetwork->SetFloodRate(sValue.ToDouble());
