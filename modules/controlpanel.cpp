@@ -286,6 +286,12 @@ class CAdminMod : public CModule {
 			PutModule("RealName = " + sValue);
 		}
 		else if (sVar == "bindhost") {
+
+			if(!m_pUser->IsAdmin()) {
+				PutModule("You are not allowed to change your bindhost.");
+				return;
+			}
+
 			if(!pUser->DenySetBindHost() || m_pUser->IsAdmin()) {
 				if (sValue.Equals(m_pUser->GetBindHost())) {
 					PutModule("This bind host is already set!");
@@ -552,6 +558,12 @@ class CAdminMod : public CModule {
 			pNetwork->SetRealName(sValue);
 			PutModule("RealName = " + pNetwork->GetRealName());
 		} else if (sVar.Equals("bindhost")) {
+
+			if(!m_pUser->IsAdmin()) {
+				PutModule("You are not allowed to change your bindhost.");
+				return;
+			}
+
 			if(!pUser->DenySetBindHost() || m_pUser->IsAdmin()) {
 				if (sValue.Equals(pNetwork->GetBindHost())) {
 					PutModule("This bind host is already set!");
