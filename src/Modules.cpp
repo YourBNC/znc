@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -530,8 +530,13 @@ bool CModule::AddCommand(const CModCommand& Command)
 
 bool CModule::AddCommand(const CString& sCmd, CModCommand::ModCmdFunc func, const CString& sArgs, const CString& sDesc)
 {
-	CModCommand cmd(sCmd, func, sArgs, sDesc);
+	CModCommand cmd(sCmd, this, func, sArgs, sDesc);
 	return AddCommand(cmd);
+}
+
+bool CModule::AddCommand(const CString& sCmd, const CString& sArgs, const CString& sDesc, std::function<void(const CString& sLine)> func) {
+	CModCommand cmd(sCmd, std::move(func), sArgs, sDesc);
+	return AddCommand(std::move(cmd));
 }
 
 void CModule::AddHelpCommand()
@@ -560,7 +565,7 @@ bool CModule::HandleCommand(const CString& sLine) {
 	const CModCommand* pCmd = FindCommand(sCmd);
 
 	if (pCmd) {
-		pCmd->Call(this, sLine);
+		pCmd->Call(sLine);
 		return true;
 	}
 
@@ -670,6 +675,13 @@ CModule::EModRet CModule::OnChanBufferEnding(CChan& Chan, CClient& Client) { ret
 CModule::EModRet CModule::OnChanBufferPlayLine(CChan& Chan, CClient& Client, CString& sLine) { return CONTINUE; }
 CModule::EModRet CModule::OnPrivBufferPlayLine(CClient& Client, CString& sLine) { return CONTINUE; }
 
+CModule::EModRet CModule::OnChanBufferPlayLine2(CChan& Chan, CClient& Client, CString& sLine, const timeval& tv) {
+	return OnChanBufferPlayLine(Chan, Client, sLine);
+}
+CModule::EModRet CModule::OnPrivBufferPlayLine2(CClient& Client, CString& sLine, const timeval& tv) {
+	return OnPrivBufferPlayLine(Client, sLine);
+}
+
 void CModule::OnClientLogin() {}
 void CModule::OnClientDisconnect() {}
 CModule::EModRet CModule::OnUserRaw(CString& sLine) { return CONTINUE; }
@@ -756,7 +768,7 @@ bool CModule::PutModNotice(const CString& sLine) {
 CModule::EModRet CModule::OnAddUser(CUser& User, CString& sErrorRet) { return CONTINUE; }
 CModule::EModRet CModule::OnDeleteUser(CUser& User) { return CONTINUE; }
 void CModule::OnClientConnect(CZNCSock* pClient, const CString& sHost, unsigned short uPort) {}
-CModule::EModRet CModule::OnLoginAttempt(CSmartPtr<CAuthBase> Auth) { return CONTINUE; }
+CModule::EModRet CModule::OnLoginAttempt(std::shared_ptr<CAuthBase> Auth) { return CONTINUE; }
 void CModule::OnFailedLogin(const CString& sUsername, const CString& sRemoteIP) {}
 CModule::EModRet CModule::OnUnknownUserRaw(CClient* pClient, CString& sLine) { return CONTINUE; }
 void CModule::OnClientCapLs(CClient* pClient, SCString& ssCaps) {}
@@ -853,7 +865,9 @@ bool CModules::OnPart(const CNick& Nick, CChan& Channel, const CString& sMessage
 bool CModules::OnInvite(const CNick& Nick, const CString& sChan) { MODHALTCHK(OnInvite(Nick, sChan)); }
 bool CModules::OnChanBufferStarting(CChan& Chan, CClient& Client) { MODHALTCHK(OnChanBufferStarting(Chan, Client)); }
 bool CModules::OnChanBufferEnding(CChan& Chan, CClient& Client) { MODHALTCHK(OnChanBufferEnding(Chan, Client)); }
+bool CModules::OnChanBufferPlayLine2(CChan& Chan, CClient& Client, CString& sLine, const timeval& tv) { MODHALTCHK(OnChanBufferPlayLine2(Chan, Client, sLine, tv)); }
 bool CModules::OnChanBufferPlayLine(CChan& Chan, CClient& Client, CString& sLine) { MODHALTCHK(OnChanBufferPlayLine(Chan, Client, sLine)); }
+bool CModules::OnPrivBufferPlayLine2(CClient& Client, CString& sLine, const timeval& tv) { MODHALTCHK(OnPrivBufferPlayLine2(Client, sLine, tv)); }
 bool CModules::OnPrivBufferPlayLine(CClient& Client, CString& sLine) { MODHALTCHK(OnPrivBufferPlayLine(Client, sLine)); }
 bool CModules::OnCTCPReply(CNick& Nick, CString& sMessage) { MODHALTCHK(OnCTCPReply(Nick, sMessage)); }
 bool CModules::OnPrivCTCP(CNick& Nick, CString& sMessage) { MODHALTCHK(OnPrivCTCP(Nick, sMessage)); }
@@ -920,7 +934,7 @@ bool CModules::OnClientConnect(CZNCSock* pClient, const CString& sHost, unsigned
 	return false;
 }
 
-bool CModules::OnLoginAttempt(CSmartPtr<CAuthBase> Auth) {
+bool CModules::OnLoginAttempt(std::shared_ptr<CAuthBase> Auth) {
 	MODHALTCHK(OnLoginAttempt(Auth));
 }
 
@@ -1077,7 +1091,7 @@ bool CModules::LoadModule(const CString& sModule, const CString& sArgs, CModInfo
 	}
 
 	if (!sRetMsg.empty()) {
-		sRetMsg += "[" + sRetMsg + "] ";
+		sRetMsg += " ";
 	}
 	sRetMsg += "[" + sModPath + "]";
 	return true;
@@ -1343,10 +1357,11 @@ CModCommand::CModCommand()
 {
 }
 
-CModCommand::CModCommand(const CString& sCmd, ModCmdFunc func, const CString& sArgs, const CString& sDesc)
-	: m_sCmd(sCmd), m_pFunc(func), m_sArgs(sArgs), m_sDesc(sDesc)
-{
-}
+CModCommand::CModCommand(const CString& sCmd, CModule* pMod, ModCmdFunc func, const CString& sArgs, const CString& sDesc)
+	: m_sCmd(sCmd), m_pFunc([pMod, func](const CString& sLine) { (pMod->*func)(sLine); }), m_sArgs(sArgs), m_sDesc(sDesc) {}
+
+CModCommand::CModCommand(const CString& sCmd, CmdFunc func, const CString& sArgs, const CString& sDesc)
+	: m_sCmd(sCmd), m_pFunc(std::move(func)), m_sArgs(sArgs), m_sDesc(sDesc) {}
 
 CModCommand::CModCommand(const CModCommand& other)
 	: m_sCmd(other.m_sCmd), m_pFunc(other.m_pFunc), m_sArgs(other.m_sArgs), m_sDesc(other.m_sDesc)

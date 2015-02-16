@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -306,6 +306,9 @@ private:
 
 	// condition variable for reporting finished cancellation
 	CConditionVariable m_cancellationCond;
+
+	// condition variable for waiting running threads == 0
+	CConditionVariable m_exit_cond;
 
 	// when this is true, all threads should exit
 	bool m_done;

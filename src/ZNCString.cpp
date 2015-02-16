@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,6 +184,8 @@ CString::EEscape CString::ToEscape(const CString& sEsc) {
 		return EDEBUG;
 	} else if (sEsc.Equals("MSGTAG")) {
 		return EMSGTAG;
+	} else if (sEsc.Equals("HEXCOLON")) {
+		return EHEXCOLON;
 	}
 
 	return EASCII;
@@ -351,6 +353,35 @@ CString CString::Escape_n(EEscape eFrom, EEscape eTo) const {
 				}
 
 				break;
+			case EHEXCOLON: {
+					while (!isxdigit(*p) && a < iLength) {
+						a++;
+						p++;
+					}
+					if (a == iLength) {
+						continue;
+					}
+					if (isdigit(*p)) {
+						ch = (unsigned char)((*p - '0') << 4);
+					} else {
+						ch = (unsigned char)((tolower(*p) - 'a' +10) << 4);
+					}
+					a++;
+					p++;
+					while (!isxdigit(*p) && a < iLength) {
+						a++;
+						p++;
+					}
+					if (a == iLength) {
+						continue;
+					}
+					if (isdigit(*p)) {
+						ch |= (unsigned char)(*p - '0');
+					} else {
+						ch |= (unsigned char)(tolower(*p) - 'a' +10);
+					}
+				}
+				break;
 		}
 
 		switch (eTo) {
@@ -420,10 +451,19 @@ CString CString::Escape_n(EEscape eFrom, EEscape eTo) const {
 				} else { sRet += ch; }
 
 				break;
+			case EHEXCOLON: {
+					sRet += tolower(szHex[ch >> 4]);
+					sRet += tolower(szHex[ch & 0xf]);
+					sRet += ":";
+				}
+				break;
 		}
 	}
 
-	sRet.reserve(0);
+	if (eTo == EHEXCOLON) {
+		sRet.TrimRight(":");
+	}
+
 	return sRet;
 }
 

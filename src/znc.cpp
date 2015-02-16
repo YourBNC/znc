@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <znc/User.h>
 #include <znc/IRCNetwork.h>
 #include <znc/Config.h>
+#include <tuple>
 
 using std::endl;
 using std::cout;
@@ -27,6 +28,8 @@ using std::map;
 using std::set;
 using std::vector;
 using std::list;
+using std::tuple;
+using std::make_tuple;
 
 static inline CString FormatBindError() {
 	CString sError = (errno == 0 ? CString("unknown error, check the host name") : CString(strerror(errno)));
@@ -52,6 +55,9 @@ CZNC::CZNC() {
 	m_sConnectThrottle.SetTTL(30000);
 	m_pLockFile = NULL;
 	m_bProtectWebSessions = true;
+	m_bHideVersion = false;
+	m_uDisabledSSLProtocols = Csock::EDP_SSL;
+	m_sSSLProtocols = "";
 }
 
 CZNC::~CZNC() {
@@ -87,28 +93,22 @@ CZNC::~CZNC() {
 }
 
 CString CZNC::GetVersion() {
-	char szBuf[128];
-
-	snprintf(szBuf, sizeof(szBuf), "%1.1f%s", VERSION, ZNC_VERSION_EXTRA);
-	// If snprintf overflows (which I doubt), we want to be on the safe side
-	szBuf[sizeof(szBuf) - 1] = '\0';
-
-	return szBuf;
+	return CString(VERSION_STR) + CString(ZNC_VERSION_EXTRA);
 }
 
 CString CZNC::GetTag(bool bIncludeVersion, bool bHTML) {
+	if (!Get().m_bHideVersion) {
+		bIncludeVersion = true;
+	}
 	CString sAddress = bHTML ? "<a href=\"http://znc.in\">http://znc.in</a>" : "http://znc.in";
 
 	if (!bIncludeVersion) {
 		return "ZNC - " + sAddress;
 	}
 
-	char szBuf[128];
-	snprintf(szBuf, sizeof(szBuf), "ZNC %1.1f%s - ", VERSION, ZNC_VERSION_EXTRA);
-	// If snprintf overflows (which I doubt), we want to be on the safe side
-	szBuf[sizeof(szBuf) - 1] = '\0';
+	CString sVersion = GetVersion();
 
-	return szBuf + sAddress;
+	return "ZNC - " + sVersion + " - " + sAddress;
 }
 
 CString CZNC::GetCompileOptionsString() {
@@ -184,7 +184,8 @@ void CZNC::Loop() {
 	while (true) {
 		CString sError;
 
-		switch (GetConfigState()) {
+		ConfigState eState = GetConfigState();
+		switch (eState) {
 		case ECONFIG_NEED_REHASH:
 			SetConfigState(ECONFIG_NOTHING);
 
@@ -196,12 +197,13 @@ void CZNC::Loop() {
 			}
 			break;
 		case ECONFIG_NEED_WRITE:
+		case ECONFIG_NEED_VERBOSE_WRITE:
 			SetConfigState(ECONFIG_NOTHING);
 
-			if (WriteConfig()) {
-				Broadcast("Writing the config succeeded", true);
-			} else {
+			if (!WriteConfig()) {
 				Broadcast("Writing the config file failed", true);
+			} else if (eState == ECONFIG_NEED_VERBOSE_WRITE) {
+				Broadcast("Writing the config succeeded", true);
 			}
 			break;
 		case ECONFIG_NOTHING:
@@ -443,7 +445,8 @@ bool CZNC::WriteConfig() {
 	config.AddKeyValuePair("MaxBufferSize", CString(m_uiMaxBufferSize));
 	config.AddKeyValuePair("SSLCertFile", CString(m_sSSLCertFile));
 	config.AddKeyValuePair("ProtectWebSessions", CString(m_bProtectWebSessions));
-	config.AddKeyValuePair("Version", CString(VERSION, 1));
+	config.AddKeyValuePair("HideVersion", CString(m_bHideVersion));
+	config.AddKeyValuePair("Version", CString(VERSION_STR));
 
 	for (size_t l = 0; l < m_vpListeners.size(); l++) {
 		CListener* pListener = m_vpListeners[l];
@@ -477,6 +480,14 @@ bool CZNC::WriteConfig() {
 
 	if (!m_sStatusPrefix.empty()) {
 		config.AddKeyValuePair("StatusPrefix", m_sStatusPrefix.FirstLine());
+	}
+
+	if (!m_sSSLCiphers.empty()) {
+		config.AddKeyValuePair("SSLCiphers", CString(m_sSSLCiphers));
+	}
+
+	if (!m_sSSLProtocols.empty()) {
+		config.AddKeyValuePair("SSLProtocols", m_sSSLProtocols);
 	}
 
 	for (unsigned int m = 0; m < m_vsMotd.size(); m++) {
@@ -563,7 +574,7 @@ bool CZNC::WriteNewConfig(const CString& sConfigFile) {
 	VCString vsLines;
 
 	vsLines.push_back(MakeConfigHeader());
-	vsLines.push_back("Version = " + CString(VERSION, 1));
+	vsLines.push_back("Version = " + CString(VERSION_STR));
 
 	m_sConfigFile = ExpandConfigPath(sConfigFile);
 
@@ -953,14 +964,16 @@ bool CZNC::DoRehash(CString& sError)
 
 	CString sSavedVersion;
 	config.FindStringEntry("version", sSavedVersion);
-	double fSavedVersion = sSavedVersion.ToDouble();
-	if (fSavedVersion < VERSION - 0.000001) {
+	tuple<unsigned int, unsigned int> tSavedVersion = make_tuple(sSavedVersion.Token(0, false, ".").ToUInt(),
+																 sSavedVersion.Token(1, false, ".").ToUInt());
+	tuple<unsigned int, unsigned int> tCurrentVersion = make_tuple(VERSION_MAJOR, VERSION_MINOR);
+	if (tSavedVersion < tCurrentVersion) {
 		if (sSavedVersion.empty()) {
 			sSavedVersion = "< 0.203";
 		}
 		CUtils::PrintMessage("Found old config from ZNC " + sSavedVersion + ". Saving a backup of it.");
-		BackupConfigOnce("pre-" + CString(VERSION, 1));
-	} else if (fSavedVersion > VERSION + 0.000001) {
+		BackupConfigOnce("pre-" + CString(VERSION_STR));
+	} else if (tSavedVersion > tCurrentVersion) {
 		CUtils::PrintError("Config was saved from ZNC " + sSavedVersion + ". It may or may not work with current ZNC " + GetVersion());
 	}
 
@@ -983,7 +996,7 @@ bool CZNC::DoRehash(CString& sError)
 		CString sModName = vit->Token(0);
 		CString sArgs = vit->Token(1, true);
 
-		if (sModName == "saslauth" && fSavedVersion < 0.207 + 0.000001) {
+		if (sModName == "saslauth" && tSavedVersion < make_tuple(0, 207)) {
 			// XXX compatibility crap, added in 0.207
 			CUtils::PrintMessage("saslauth module was renamed to cyrusauth. Loading cyrusauth instead.");
 			sModName = "cyrusauth";
@@ -1077,6 +1090,8 @@ bool CZNC::DoRehash(CString& sError)
 		m_sStatusPrefix = sVal;
 	if (config.FindStringEntry("sslcertfile", sVal))
 		m_sSSLCertFile = sVal;
+	if (config.FindStringEntry("sslciphers", sVal))
+		m_sSSLCiphers = sVal;
 	if (config.FindStringEntry("skin", sVal))
 		SetSkinName(sVal);
 	if (config.FindStringEntry("connectdelay", sVal))
@@ -1089,6 +1104,47 @@ bool CZNC::DoRehash(CString& sError)
 		m_uiMaxBufferSize = sVal.ToUInt();
 	if (config.FindStringEntry("protectwebsessions", sVal))
   		m_bProtectWebSessions = sVal.ToBool();
+	if (config.FindStringEntry("hideversion", sVal))
+		m_bHideVersion = sVal.ToBool();
+
+	if (config.FindStringEntry("sslprotocols", m_sSSLProtocols)) {
+		VCString vsProtocols;
+		m_sSSLProtocols.Split(" ", vsProtocols, false, "", "", true, true);
+
+		for (CString& sProtocol : vsProtocols) {
+
+			unsigned int uFlag = 0;
+			bool bEnable = sProtocol.TrimPrefix("+");
+			bool bDisable = sProtocol.TrimPrefix("-");
+
+			if (sProtocol.Equals("All")) {
+				uFlag = ~0;
+			} else if (sProtocol.Equals("SSLv2")) {
+				uFlag = Csock::EDP_SSLv2;
+			} else if (sProtocol.Equals("SSLv3")) {
+				uFlag = Csock::EDP_SSLv3;
+			} else if (sProtocol.Equals("TLSv1")) {
+				uFlag = Csock::EDP_TLSv1;
+			} else if (sProtocol.Equals("TLSv1.1")) {
+				uFlag = Csock::EDP_TLSv1_1;
+			} else if (sProtocol.Equals("TLSv1.2")) {
+				uFlag = Csock::EDP_TLSv1_2;
+			} else {
+				CUtils::PrintError("Invalid SSLProtocols value [" + sProtocol + "]");
+				CUtils::PrintError("The syntax is [SSLProtocols = [+|-]<protocol> ...]");
+				CUtils::PrintError("Available protocols are [SSLv2, SSLv3, TLSv1, TLSv1.1, TLSv1.2]");
+				return false;
+			}
+
+			if (bEnable) {
+				m_uDisabledSSLProtocols &= ~uFlag;
+			} else if (bDisable) {
+				m_uDisabledSSLProtocols |= uFlag;
+			} else {
+				m_uDisabledSSLProtocols = ~uFlag;
+			}
+		}
+	}
 
 	// This has to be after SSLCertFile is handled since it uses that value
 	const char *szListenerEntries[] = {
@@ -1773,7 +1829,7 @@ CZNC::TrafficStatsMap CZNC::GetTrafficStats(TrafficStatsPair &Users,
 	return ret;
 }
 
-void CZNC::AuthUser(CSmartPtr<CAuthBase> AuthClass) {
+void CZNC::AuthUser(std::shared_ptr<CAuthBase> AuthClass) {
 	// TODO unless the auth module calls it, CUser::IsHostAllowed() is not honoured
 	bool bReturn = false;
 	GLOBALMODULECALL(OnLoginAttempt(AuthClass), &bReturn);

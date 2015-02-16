@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ static CSessionManager Sessions;
 
 class CWebAuth : public CAuthBase {
 public:
-	CWebAuth(CWebSock* pWebSock, const CString& sUsername, const CString& sPassword);
+	CWebAuth(CWebSock* pWebSock, const CString& sUsername, const CString& sPassword, bool bBasic);
 	virtual ~CWebAuth() {}
 
 	void SetWebSock(CWebSock* pWebSock) { m_pWebSock = pWebSock; }
@@ -60,6 +60,7 @@ public:
 private:
 protected:
 	CWebSock*   m_pWebSock;
+	bool m_bBasic;
 };
 
 void CWebSock::FinishUserSessions(const CUser& User) {
@@ -107,9 +108,10 @@ void CWebSession::UpdateLastActive() {
 
 bool CWebSession::IsAdmin() const { return IsLoggedIn() && m_pUser->IsAdmin(); }
 
-CWebAuth::CWebAuth(CWebSock* pWebSock, const CString& sUsername, const CString& sPassword)
+CWebAuth::CWebAuth(CWebSock* pWebSock, const CString& sUsername, const CString& sPassword, bool bBasic)
 	: CAuthBase(sUsername, sPassword, pWebSock) {
 	m_pWebSock = pWebSock;
+	m_bBasic = bBasic;
 }
 
 void CWebSession::ClearMessageLoops() {
@@ -153,13 +155,15 @@ void CWebSessionMap::FinishUserSessions(const CUser& User) {
 
 void CWebAuth::AcceptedLogin(CUser& User) {
 	if (m_pWebSock) {
-		CSmartPtr<CWebSession> spSession = m_pWebSock->GetSession();
+		std::shared_ptr<CWebSession> spSession = m_pWebSock->GetSession();
 
 		spSession->SetUser(&User);
 
 		m_pWebSock->SetLoggedIn(true);
 		m_pWebSock->UnPauseRead();
-		m_pWebSock->Redirect("/?cookie_check=true");
+		if (!m_bBasic) {
+			m_pWebSock->Redirect("/?cookie_check=true");
+		}
 
 		DEBUG("Successful login attempt ==> USER [" + User.GetUserName() + "] ==> SESSION [" + spSession->GetId() + "]");
 	}
@@ -167,7 +171,7 @@ void CWebAuth::AcceptedLogin(CUser& User) {
 
 void CWebAuth::RefusedLogin(const CString& sReason) {
 	if (m_pWebSock) {
-		CSmartPtr<CWebSession> spSession = m_pWebSock->GetSession();
+		std::shared_ptr<CWebSession> spSession = m_pWebSock->GetSession();
 
 		spSession->AddError("Invalid login!");
 		spSession->SetUser(NULL);
@@ -188,11 +192,11 @@ void CWebAuth::Invalidate() {
 CWebSock::CWebSock(const CString& sURIPrefix) : CHTTPSock(NULL, sURIPrefix) {
 	m_bPathsSet = false;
 
-	m_Template.AddTagHandler(new CZNCTagHandler(*this));
+	m_Template.AddTagHandler(std::make_shared<CZNCTagHandler>(*this));
 }
 
 CWebSock::~CWebSock() {
-	if (!m_spAuth.IsNull()) {
+	if (m_spAuth) {
 		m_spAuth->Invalidate();
 	}
 
@@ -628,7 +632,7 @@ CWebSock::EPageReqResult CWebSock::OnPageRequestInternal(const CString& sURI, CS
 		if (GetParam("submitted").ToBool()) {
 			m_sUser = GetParam("user");
 			m_sPass = GetParam("pass");
-			m_bLoggedIn = OnLogin(m_sUser, m_sPass);
+			m_bLoggedIn = OnLogin(m_sUser, m_sPass, false);
 
 			// AcceptedLogin()/RefusedLogin() will call Redirect()
 			return PAGE_DEFERRED;
@@ -819,13 +823,13 @@ static inline bool compareLastActive(const std::pair<const CString, CWebSession 
 	return first.second->GetLastActive() < second.second->GetLastActive();
 }
 
-CSmartPtr<CWebSession> CWebSock::GetSession() {
-	if (!m_spSession.IsNull()) {
+std::shared_ptr<CWebSession> CWebSock::GetSession() {
+	if (m_spSession) {
 		return m_spSession;
 	}
 
 	const CString sCookieSessionId = GetRequestCookie("SessionId");
-	CSmartPtr<CWebSession> *pSession = Sessions.m_mspSessions.GetItem(sCookieSessionId);
+	std::shared_ptr<CWebSession> *pSession = Sessions.m_mspSessions.GetItem(sCookieSessionId);
 
 	if (pSession != NULL) {
 		// Refresh the timeout
@@ -855,7 +859,7 @@ CSmartPtr<CWebSession> CWebSock::GetSession() {
 		DEBUG("Auto generated session: [" + sSessionID + "]");
 	} while (Sessions.m_mspSessions.HasItem(sSessionID));
 
-	CSmartPtr<CWebSession> spSession(new CWebSession(sSessionID, GetRemoteIP()));
+	std::shared_ptr<CWebSession> spSession(new CWebSession(sSessionID, GetRemoteIP()));
 	Sessions.m_mspSessions.AddItem(spSession->GetId(), spSession);
 
 	m_spSession = spSession;
@@ -864,13 +868,13 @@ CSmartPtr<CWebSession> CWebSock::GetSession() {
 }
 
 CString CWebSock::GetCSRFCheck() {
-	CSmartPtr<CWebSession> pSession = GetSession();
+	std::shared_ptr<CWebSession> pSession = GetSession();
 	return pSession->GetId().MD5();
 }
 
-bool CWebSock::OnLogin(const CString& sUser, const CString& sPass) {
-	DEBUG("=================== CWebSock::OnLogin()");
-	m_spAuth = new CWebAuth(this, sUser, sPass);
+bool CWebSock::OnLogin(const CString& sUser, const CString& sPass, bool bBasic) {
+	DEBUG("=================== CWebSock::OnLogin(), basic auth? " << std::boolalpha << bBasic);
+	m_spAuth = std::make_shared<CWebAuth>(this, sUser, sPass, bBasic);
 
 	// Some authentication module could need some time, block this socket
 	// until then. CWebAuth will UnPauseRead().
@@ -889,7 +893,7 @@ Csock* CWebSock::GetSockObj(const CString& sHost, unsigned short uPort) {
 }
 
 CString CWebSock::GetSkinName() {
-	CSmartPtr<CWebSession> spSession = GetSession();
+	std::shared_ptr<CWebSession> spSession = GetSession();
 
 	if (spSession->IsLoggedIn() && !spSession->GetUser()->GetSkinName().empty()) {
 		return spSession->GetUser()->GetSkinName();

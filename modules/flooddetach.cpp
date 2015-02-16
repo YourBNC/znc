@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public:
 		SetArgs(CString(m_iThresholdMsgs) + " " + CString(m_iThresholdSecs));
 	}
 
-	bool OnLoad(const CString& sArgs, CString& sMessage) {
+	bool OnLoad(const CString& sArgs, CString& sMessage) override {
 		m_iThresholdMsgs = sArgs.Token(0).ToUInt();
 		m_iThresholdSecs = sArgs.Token(1).ToUInt();
 
@@ -64,7 +64,7 @@ public:
 		return true;
 	}
 
-	void OnIRCDisconnected() {
+	void OnIRCDisconnected() override {
 		m_chans.clear();
 	}
 
@@ -77,7 +77,7 @@ public:
 			if (it->second.first + (time_t)m_iThresholdSecs >= now)
 				continue;
 
-			CChan *pChan = m_pNetwork->FindChan(it->first);
+			CChan *pChan = GetNetwork()->FindChan(it->first);
 			if (it->second.second >= m_iThresholdMsgs
 					&& pChan && pChan->IsDetached()) {
 				// The channel is detached and it is over the
@@ -92,7 +92,7 @@ public:
 				}
 				// No buffer playback, makes sense, doesn't it?
 				pChan->ClearBuffer();
-				pChan->JoinUser();
+				pChan->AttachUser();
 			}
 
 			Limits::iterator it2 = it++;
@@ -152,23 +152,23 @@ public:
 		}
 	}
 
-	EModRet OnChanMsg(CNick& Nick, CChan& Channel, CString& sMessage) {
+	EModRet OnChanMsg(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		Message(Channel);
 		return CONTINUE;
 	}
 
 	// This also catches OnChanAction()
-	EModRet OnChanCTCP(CNick& Nick, CChan& Channel, CString& sMessage) {
+	EModRet OnChanCTCP(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		Message(Channel);
 		return CONTINUE;
 	}
 
-	EModRet OnChanNotice(CNick& Nick, CChan& Channel, CString& sMessage) {
+	EModRet OnChanNotice(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		Message(Channel);
 		return CONTINUE;
 	}
 
-	EModRet OnTopic(CNick& Nick, CChan& Channel, CString& sTopic) {
+	EModRet OnTopic(CNick& Nick, CChan& Channel, CString& sTopic) override {
 		Message(Channel);
 		return CONTINUE;
 	}

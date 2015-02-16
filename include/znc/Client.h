@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <znc/Socket.h>
 #include <znc/Utils.h>
 #include <znc/main.h>
+#include <memory>
 
 // Forward Declarations
 class CZNC;
@@ -32,14 +33,14 @@ class CClient;
 
 class CAuthBase {
 public:
-	CAuthBase(const CString& sUsername, const CString& sPassword, Csock *pSock) {
+	CAuthBase(const CString& sUsername, const CString& sPassword, CZNCSock* pSock) {
 		SetLoginInfo(sUsername, sPassword, pSock);
 	}
 
 	virtual ~CAuthBase() {}
 
 	virtual void SetLoginInfo(const CString& sUsername, const CString& sPassword,
-			Csock *pSock) {
+			CZNCSock* pSock) {
 		m_sUsername = sUsername;
 		m_sPassword = sPassword;
 		m_pSock = pSock;
@@ -62,9 +63,9 @@ protected:
 	virtual void RefusedLogin(const CString& sReason) = 0;
 
 private:
-	CString  m_sUsername;
-	CString  m_sPassword;
-	Csock*   m_pSock;
+	CString   m_sUsername;
+	CString   m_sPassword;
+	CZNCSock* m_pSock;
 };
 
 
@@ -81,9 +82,9 @@ protected:
 	CClient* m_pClient;
 };
 
-class CClient : public CZNCSock {
+class CClient : public CIRCSocket {
 public:
-	CClient() : CZNCSock() {
+	CClient() : CIRCSocket() {
 		m_pUser = NULL;
 		m_pNetwork = NULL;
 		m_bGotPass = false;
@@ -95,6 +96,8 @@ public:
 		m_bAway = false;
 		m_bServerTime = false;
 		m_bBatch = false;
+		m_bSelfMessage = false;
+		m_bPlaybackActive = false;
 		EnableReadLine();
 		// RFC says a line can have 512 chars max, but we are
 		// a little more gentle ;)
@@ -111,17 +114,24 @@ public:
 
 	CString GetNick(bool bAllowIRCNick = true) const;
 	CString GetNickMask() const;
+	CString GetIdentifier() const { return m_sIdentifier; }
 	bool HasNamesx() const { return m_bNamesx; }
 	bool HasUHNames() const { return m_bUHNames; }
 	bool IsAway() const { return m_bAway; }
 	bool HasServerTime() const { return m_bServerTime; }
 	bool HasBatch() const { return m_bBatch; }
+	bool HasSelfMessage() const { return m_bSelfMessage; }
+
+	static bool IsValidIdentifier(const CString& sIdentifier);
 
 	void UserCommand(CString& sLine);
 	void UserPortCommand(CString& sLine);
 	void StatusCTCP(const CString& sCommand);
 	void BouncedOff();
 	bool IsAttached() const { return m_pUser != NULL; }
+
+	bool IsPlaybackActive() const { return m_bPlaybackActive; }
+	void SetPlaybackActive(bool bActive) { m_bPlaybackActive = bActive; }
 
 	void PutIRC(const CString& sLine);
 	void PutClient(const CString& sLine);
@@ -155,6 +165,9 @@ public:
 private:
 	void HandleCap(const CString& sLine);
 	void RespondCap(const CString& sResponse);
+	void ParsePass(const CString& sAuthLine);
+	void ParseUser(const CString& sAuthLine);
+	void ParseIdentifier(const CString& sAuthLine);
 
 protected:
 	bool                 m_bGotPass;
@@ -166,14 +179,19 @@ protected:
 	bool                 m_bAway;
 	bool                 m_bServerTime;
 	bool                 m_bBatch;
+	bool                 m_bSelfMessage;
+	bool                 m_bPlaybackActive;
 	CUser*               m_pUser;
 	CIRCNetwork*         m_pNetwork;
 	CString              m_sNick;
 	CString              m_sPass;
 	CString              m_sUser;
 	CString              m_sNetwork;
-	CSmartPtr<CAuthBase> m_spAuth;
+	CString              m_sIdentifier;
+	std::shared_ptr<CAuthBase> m_spAuth;
 	SCString             m_ssAcceptedCaps;
+
+	friend class ClientTest;
 };
 
 #endif // !_CLIENT_H

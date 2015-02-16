@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,31 +112,32 @@ void CClient::UserCommand(CString& sLine) {
 			return;
 		}
 
-		CString sChan = sLine.Token(1).MakeLower();
+		CString sPatterns = sLine.Token(1, true);
 
-		if (sChan.empty()) {
-			PutStatus("Usage: Detach <#chan>");
+		if (sPatterns.empty()) {
+			PutStatus("Usage: Detach <#chans>");
 			return;
 		}
 
-		const vector<CChan*>& vChans = m_pNetwork->GetChans();
-		vector<CChan*>::const_iterator it;
-		unsigned int uMatches = 0, uDetached = 0;
-		for (it = vChans.begin(); it != vChans.end(); ++it) {
-			CChan *pChannel = *it;
-			CString channelName = pChannel->GetName().AsLower();
+		VCString vsChans;
+		sPatterns.Replace(",", " ");
+		sPatterns.Split(" ", vsChans, false, "", "", true, true);
 
-			if (!channelName.WildCmp(sChan))
-				continue;
-			uMatches++;
-
-			if ((*it)->IsDetached())
-				continue;
-			uDetached++;
-			(*it)->DetachUser();
+		set<CChan*> sChans;
+		for (const CString& sChan : vsChans) {
+			vector<CChan*> vChans = m_pNetwork->FindChans(sChan);
+			sChans.insert(vChans.begin(), vChans.end());
 		}
 
-		PutStatus("There were [" + CString(uMatches) + "] channels matching [" + sChan + "]");
+		unsigned int uDetached = 0;
+		for (CChan* pChan : sChans) {
+			if (pChan->IsDetached())
+				continue;
+			uDetached++;
+			pChan->DetachUser();
+		}
+
+		PutStatus("There were [" + CString(sChans.size()) + "] channels matching [" + sPatterns + "]");
 		PutStatus("Detached [" + CString(uDetached) + "] channels");
 	} else if (sCommand.Equals("VERSION")) {
 		PutStatus(CZNC::GetTag());
@@ -187,6 +188,7 @@ void CClient::UserCommand(CString& sLine) {
 		CTable Table;
 		Table.AddColumn("Host");
 		Table.AddColumn("Network");
+		Table.AddColumn("Identifier");
 
 		for (unsigned int a = 0; a < vClients.size(); a++) {
 			Table.AddRow();
@@ -194,6 +196,7 @@ void CClient::UserCommand(CString& sLine) {
 			if (vClients[a]->GetNetwork()) {
 				Table.SetCell("Network", vClients[a]->GetNetwork()->GetName());
 			}
+			Table.SetCell("Identifier", vClients[a]->GetIdentifier());
 		}
 
 		PutStatus(Table);
@@ -363,26 +366,30 @@ void CClient::UserCommand(CString& sLine) {
 			return;
 		}
 
-		CString sChan = sLine.Token(1, true);
+		CString sPatterns = sLine.Token(1, true);
 
-		if (sChan.empty()) {
-			PutStatus("Usage: EnableChan <channel>");
+		if (sPatterns.empty()) {
+			PutStatus("Usage: EnableChan <#chans>");
 		} else {
-			const vector<CChan*>& vChans = m_pNetwork->GetChans();
-			vector<CChan*>::const_iterator it;
-			unsigned int uMatches = 0, uEnabled = 0;
-			for (it = vChans.begin(); it != vChans.end(); ++it) {
-				if (!(*it)->GetName().WildCmp(sChan))
-					continue;
-				uMatches++;
+			VCString vsChans;
+			sPatterns.Replace(",", " ");
+			sPatterns.Split(" ", vsChans, false, "", "", true, true);
 
-				if (!(*it)->IsDisabled())
-					continue;
-				uEnabled++;
-				(*it)->Enable();
+			set<CChan*> sChans;
+			for (const CString& sChan : vsChans) {
+				vector<CChan*> vChans = m_pNetwork->FindChans(sChan);
+				sChans.insert(vChans.begin(), vChans.end());
 			}
 
-			PutStatus("There were [" + CString(uMatches) + "] channels matching [" + sChan + "]");
+			unsigned int uEnabled = 0;
+			for (CChan* pChan : sChans) {
+				if (!pChan->IsDisabled())
+					continue;
+				uEnabled++;
+				pChan->Enable();
+			}
+
+			PutStatus("There were [" + CString(sChans.size()) + "] channels matching [" + sPatterns + "]");
 			PutStatus("Enabled [" + CString(uEnabled) + "] channels");
 		}
 	} else if (sCommand.Equals("DISABLECHAN")) {
@@ -391,26 +398,30 @@ void CClient::UserCommand(CString& sLine) {
 			return;
 		}
 
-		CString sChan = sLine.Token(1, true);
+		CString sPatterns = sLine.Token(1, true);
 
-		if (sChan.empty()) {
-			PutStatus("Usage: DisableChan <channel>");
+		if (sPatterns.empty()) {
+			PutStatus("Usage: DisableChan <#chans>");
 		} else {
-			const vector<CChan*>& vChans = m_pNetwork->GetChans();
-			vector<CChan*>::const_iterator it;
-			unsigned int uMatches = 0, uDisabled = 0;
-			for (it = vChans.begin(); it != vChans.end(); ++it) {
-				if (!(*it)->GetName().WildCmp(sChan))
-					continue;
-				uMatches++;
+			VCString vsChans;
+			sPatterns.Replace(",", " ");
+			sPatterns.Split(" ", vsChans, false, "", "", true, true);
 
-				if ((*it)->IsDisabled())
-					continue;
-				uDisabled++;
-				(*it)->Disable();
+			set<CChan*> sChans;
+			for (const CString& sChan : vsChans) {
+				vector<CChan*> vChans = m_pNetwork->FindChans(sChan);
+				sChans.insert(vChans.begin(), vChans.end());
 			}
 
-			PutStatus("There were [" + CString(uMatches) + "] channels matching [" + sChan + "]");
+			unsigned int uDisabled = 0;
+			for (CChan* pChan : sChans) {
+				if (pChan->IsDisabled())
+					continue;
+				uDisabled++;
+				pChan->Disable();
+			}
+
+			PutStatus("There were [" + CString(sChans.size()) + "] channels matching [" + sPatterns + "]");
 			PutStatus("Disabled [" + CString(uDisabled) + "] channels");
 		}
 	} else if (sCommand.Equals("LISTCHANS")) {
@@ -772,6 +783,44 @@ void CClient::UserCommand(CString& sLine) {
 			PutStatus(Table);
 		} else {
 			PutStatus("You don't have any servers added.");
+		}
+	} else if (sCommand.Equals("AddTrustedServerFingerprint")) {
+		if (!m_pNetwork) {
+			PutStatus("You must be connected with a network to use this command");
+			return;
+		}
+		CString sFP = sLine.Token(1);
+		if (sFP.empty()) {
+			PutStatus("Usage: AddTrustedServerFingerprint <fi:ng:er>");
+			return;
+		}
+		m_pNetwork->AddTrustedFingerprint(sFP);
+		PutStatus("Done.");
+	} else if (sCommand.Equals("DelTrustedServerFingerprint")) {
+		if (!m_pNetwork) {
+			PutStatus("You must be connected with a network to use this command");
+			return;
+		}
+		CString sFP = sLine.Token(1);
+		if (sFP.empty()) {
+			PutStatus("Usage: DelTrustedServerFingerprint <fi:ng:er>");
+			return;
+		}
+		m_pNetwork->DelTrustedFingerprint(sFP);
+		PutStatus("Done.");
+	} else if (sCommand.Equals("ListTrustedServerFingerprints")) {
+		if (!m_pNetwork) {
+			PutStatus("You must be connected with a network to use this command");
+			return;
+		}
+		const SCString& ssFPs = m_pNetwork->GetTrustedFingerprints();
+		if (ssFPs.empty()) {
+			PutStatus("No fingerprints added.");
+		} else {
+			int k = 0;
+			for (const CString& sFP : ssFPs) {
+				PutStatus(CString(++k) + ". " + sFP);
+			}
 		}
 	} else if (sCommand.Equals("TOPICS")) {
 		if (!m_pNetwork) {
@@ -1621,14 +1670,18 @@ void CClient::HelpUser(const CString& sFilter) {
 	if (m_pUser->IsAdmin()) {
 		AddCommandHelp(Table, "MoveNetwork", "<old user> <old network> <new user> [new network]", "Move an IRC network from one user to another", sFilter);
 	}
-	AddCommandHelp(Table, "JumpNetwork", "<network>", "Jump to another network", sFilter);
+	AddCommandHelp(Table, "JumpNetwork", "<network>", "Jump to another network (Alternatively, you can connect to ZNC several times, using `user/network` as username)", sFilter);
 
 	AddCommandHelp(Table, "AddServer", "<host> [[+]port] [pass]", "Add a server to the list of alternate/backup servers of current IRC network.", sFilter);
 	AddCommandHelp(Table, "DelServer", "<host> [port] [pass]", "Remove a server from the list of alternate/backup servers of current IRC network", sFilter);
 
-	AddCommandHelp(Table, "EnableChan", "<#chan>", "Enable the channel", sFilter);
-	AddCommandHelp(Table, "DisableChan", "<#chan>", "Disable the channel", sFilter);
-	AddCommandHelp(Table, "Detach", "<#chan>", "Detach from the channel", sFilter);
+	AddCommandHelp(Table, "AddTrustedServerFingerprint", "<fi:ng:er>", "Add a trusted server SSL certificate fingerprint (SHA-256) to current IRC network.", sFilter);
+	AddCommandHelp(Table, "DelTrustedServerFingerprint", "<fi:ng:er>", "Delete a trusted server SSL certificate from current IRC network.", sFilter);
+	AddCommandHelp(Table, "ListTrustedServerFingerprints", "", "List all trusted server SSL certificates of current IRC network.", sFilter);
+
+	AddCommandHelp(Table, "EnableChan", "<#chans>", "Enable channels", sFilter);
+	AddCommandHelp(Table, "DisableChan", "<#chans>", "Disable channels", sFilter);
+	AddCommandHelp(Table, "Detach", "<#chans>", "Detach from channels", sFilter);
 	AddCommandHelp(Table, "Topics", "", "Show topics in all your channels", sFilter);
 
 	AddCommandHelp(Table, "PlayBuffer", "<#chan|query>", "Play back the specified buffer", sFilter);

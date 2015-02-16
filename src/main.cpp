@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ static void signalHandler(int sig) {
 		break;
 	case SIGUSR1:
 		CUtils::PrintMessage("Caught SIGUSR1");
-		CZNC::Get().SetConfigState(CZNC::ECONFIG_NEED_WRITE);
+		CZNC::Get().SetConfigState(CZNC::ECONFIG_NEED_VERBOSE_WRITE);
 		break;
 	default:
 		CUtils::PrintMessage("WTF? Signal handler called for a signal it doesn't know?");
@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
 #ifdef HAVE_LIBSSL
 	bool bMakePem = false;
 #endif
+	CZNC::CreateInstance();
 
 	while ((iArg = getopt_long(argc, argv, "hvnrcspd:Df", g_LongOpts, &iOptIndex)) != -1) {
 		switch (iArg) {
@@ -251,8 +252,6 @@ int main(int argc, char** argv) {
 		CUtils::PrintError("Use --datadir instead.");
 		return 1;
 	}
-
-	CZNC::CreateInstance();
 
 	CZNC* pZNC = &CZNC::Get();
 	pZNC->InitDirs(((argc) ? argv[0] : ""), sDataDir);

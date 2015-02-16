@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <znc/IRCNetwork.h>
 #include <znc/Query.h>
 
+using std::set;
 using std::map;
 using std::vector;
 
@@ -67,7 +68,7 @@ using std::vector;
 }
 
 CClient::~CClient() {
-	if (!m_spAuth.IsNull()) {
+	if (m_spAuth) {
 		CClientAuth* pAuth = (CClientAuth*) &(*m_spAuth);
 		pAuth->Invalidate();
 	}
@@ -81,7 +82,10 @@ void CClient::SendRequiredPasswordNotice() {
 	PutClient(":irc.znc.in 464 " + GetNick() + " :Password required");
 	PutClient(":irc.znc.in NOTICE AUTH :*** "
 			  "You need to send your password. "
-			  "Try /quote PASS <username>:<password>");
+			  "Configure your client to send a server password.");
+	PutClient(":irc.znc.in NOTICE AUTH :*** "
+			  "To connect now, you can use /quote PASS <username>:<password>, "
+			  "or /quote PASS <username>/<network>:<password> to connect to a specific network.");
 }
 
 void CClient::ReadLine(const CString& sData) {
@@ -117,20 +121,7 @@ void CClient::ReadLine(const CString& sData) {
 			m_bGotPass = true;
 
 			CString sAuthLine = sLine.Token(1, true).TrimPrefix_n();
-
-			// [user[/network]:]password
-			if (sAuthLine.find(":") == CString::npos) {
-				m_sPass = sAuthLine;
-				sAuthLine = "";
-			} else {
-				m_sPass = sAuthLine.Token(1, true, ":");
-				sAuthLine = sAuthLine.Token(0, false, ":");
-			}
-
-			if (!sAuthLine.empty()) {
-				m_sUser = sAuthLine.Token(0, false, "/");
-				m_sNetwork = sAuthLine.Token(1, true, "/");
-			}
+			ParsePass(sAuthLine);
 
 			AuthUser();
 			return;  // Don't forward this msg.  ZNC has already registered us.
@@ -143,12 +134,10 @@ void CClient::ReadLine(const CString& sData) {
 			AuthUser();
 			return;  // Don't forward this msg.  ZNC will handle nick changes until auth is complete
 		} else if (sCommand.Equals("USER")) {
-			// user[/network]
 			CString sAuthLine = sLine.Token(1);
 
 			if (m_sUser.empty() && !sAuthLine.empty()) {
-				m_sUser = sAuthLine.Token(0, false, "/");
-				m_sNetwork = sAuthLine.Token(1, true, "/");
+				ParseUser(sAuthLine);
 			}
 
 			m_bGotUser = true;
@@ -245,6 +234,10 @@ void CClient::ReadLine(const CString& sData) {
 				sCTCP.LeftChomp();
 				sCTCP.RightChomp();
 
+				if (sCTCP.Token(0) == "VERSION") {
+					sCTCP += " via " + CZNC::GetTag(false);
+				}
+
 				NETWORKMODULECALL(OnUserCTCPReply(sTarget, sCTCP), m_pUser, m_pNetwork, this, &bContinue);
 				if (bContinue) continue;
 
@@ -270,15 +263,11 @@ void CClient::ReadLine(const CString& sData) {
 				}
 
 				// Relay to the rest of the clients that may be connected to this user
-				if (m_pNetwork->IsChan(sTarget)) {
-					const vector<CClient*>& vClients = GetClients();
+				const vector<CClient*>& vClients = GetClients();
 
-					for (unsigned int a = 0; a < vClients.size(); a++) {
-						CClient* pClient = vClients[a];
-
-						if (pClient != this) {
-							pClient->PutClient(":" + GetNickMask() + " NOTICE " + sTarget + " :" + sMsg);
-						}
+				for (CClient* pClient : vClients) {
+					if (pClient != this && (m_pNetwork->IsChan(sTarget) || pClient->HasSelfMessage())) {
+						pClient->PutClient(":" + GetNickMask() + " NOTICE " + sTarget + " :" + sMsg);
 					}
 				}
 
@@ -323,23 +312,21 @@ void CClient::ReadLine(const CString& sData) {
 							if (pChan && (!pChan->AutoClearChanBuffer() || !m_pNetwork->IsUserOnline())) {
 								pChan->AddBuffer(":" + _NAMEDFMT(GetNickMask()) + " PRIVMSG " + _NAMEDFMT(sTarget) + " :\001ACTION {text}\001", sMessage);
 							}
-
-							// Relay to the rest of the clients that may be connected to this user
-							const vector<CClient*>& vClients = GetClients();
-
-							for (unsigned int a = 0; a < vClients.size(); a++) {
-								CClient* pClient = vClients[a];
-
-								if (pClient != this) {
-									pClient->PutClient(":" + GetNickMask() + " PRIVMSG " + sTarget + " :\001" + sCTCP + "\001");
-								}
-							}
 						} else {
 							if (!m_pUser->AutoClearQueryBuffer() || !m_pNetwork->IsUserOnline()) {
 								CQuery* pQuery = m_pNetwork->AddQuery(sTarget);
 								if (pQuery) {
 									pQuery->AddBuffer(":" + _NAMEDFMT(GetNickMask()) + " PRIVMSG " + _NAMEDFMT(sTarget) + " :\001ACTION {text}\001", sMessage);
 								}
+							}
+						}
+
+						// Relay to the rest of the clients that may be connected to this user
+						const vector<CClient*>& vClients = GetClients();
+
+						for (CClient* pClient : vClients) {
+							if (pClient != this && (m_pNetwork->IsChan(sTarget) || pClient->HasSelfMessage())) {
+								pClient->PutClient(":" + GetNickMask() + " PRIVMSG " + sTarget + " :\001" + sCTCP + "\001");
 							}
 						}
 					} else {
@@ -392,16 +379,11 @@ void CClient::ReadLine(const CString& sData) {
 				PutIRC("PRIVMSG " + sTarget + " :" + sMsg);
 
 				// Relay to the rest of the clients that may be connected to this user
+				const vector<CClient*>& vClients = GetClients();
 
-				if (m_pNetwork->IsChan(sTarget)) {
-					const vector<CClient*>& vClients = GetClients();
-
-					for (unsigned int a = 0; a < vClients.size(); a++) {
-						CClient* pClient = vClients[a];
-
-						if (pClient != this) {
-							pClient->PutClient(":" + GetNickMask() + " PRIVMSG " + sTarget + " :" + sMsg);
-						}
+				for (CClient* pClient : vClients) {
+					if (pClient != this && (m_pNetwork->IsChan(sTarget) || pClient->HasSelfMessage())) {
+						pClient->PutClient(":" + GetNickMask() + " PRIVMSG " + sTarget + " :" + sMsg);
 					}
 				}
 			}
@@ -415,30 +397,33 @@ void CClient::ReadLine(const CString& sData) {
 	}
 
 	if (sCommand.Equals("DETACH")) {
-		CString sChannels = sLine.Token(1).TrimPrefix_n();
+		CString sPatterns = sLine.Token(1, true);
 
-		if (sChannels.empty()) {
-			PutStatusNotice("Usage: /detach <#chan>");
+		if (sPatterns.empty()) {
+			PutStatusNotice("Usage: /detach <#chans>");
 			return;
 		}
 
-		VCString vChans;
-		sChannels.Split(",", vChans, false);
-		sChannels.clear();
+		VCString vsChans;
+		sPatterns.Replace(",", " ");
+		sPatterns.Split(" ", vsChans, false, "", "", true, true);
 
-		for (VCString::const_iterator channelIterator = vChans.begin();
-				channelIterator != vChans.end();
-				++channelIterator)
-		{
-			CString sChannel = *channelIterator;
-
-			CChan *pChannel = m_pNetwork->FindChan(sChannel);
-			if (pChannel) {
-				pChannel->DetachUser();
-			} else {
-				PutStatusNotice("You are not on [" + sChannel + "]");
-			}
+		set<CChan*> sChans;
+		for (const CString& sChan : vsChans) {
+			vector<CChan*> vChans = m_pNetwork->FindChans(sChan);
+			sChans.insert(vChans.begin(), vChans.end());
 		}
+
+		unsigned int uDetached = 0;
+		for (CChan* pChan : sChans) {
+			if (pChan->IsDetached())
+				continue;
+			uDetached++;
+			pChan->DetachUser();
+		}
+
+		PutStatusNotice("There were [" + CString(sChans.size()) + "] channels matching [" + sPatterns + "]");
+		PutStatusNotice("Detached [" + CString(uDetached) + "] channels");
 
 		return;
 	} else if (sCommand.Equals("JOIN")) {
@@ -457,7 +442,10 @@ void CClient::ReadLine(const CString& sData) {
 
 			CChan* pChan = m_pNetwork->FindChan(sChannel);
 			if (pChan) {
-				pChan->JoinUser(false, sKey);
+				if (pChan->IsDetached())
+					pChan->AttachUser(this);
+				else
+					pChan->JoinUser(sKey);
 				continue;
 			}
 
@@ -631,7 +619,7 @@ void CClient::AuthUser() {
 	if (!m_bGotNick || !m_bGotUser || !m_bGotPass || m_bInCap || IsAttached())
 		return;
 
-	m_spAuth = new CClientAuth(this, m_sUser, m_sPass);
+	m_spAuth = std::make_shared<CClientAuth>(this, m_sUser, m_sPass);
 
 	CZNC::Get().AuthUser(m_spAuth);
 }
@@ -778,15 +766,18 @@ void CClient::PutIRC(const CString& sLine) {
 CString CClient::GetFullName() const {
 	if (!m_pUser)
 		return GetRemoteIP();
-	if (!m_pNetwork)
-		return m_pUser->GetUserName();
-	return m_pUser->GetUserName() + "/" + m_pNetwork->GetName();
+	CString sFullName = m_pUser->GetUserName();
+	if (!m_sIdentifier.empty())
+		sFullName += "@" + m_sIdentifier;
+	if (m_pNetwork)
+		sFullName += "/" + m_pNetwork->GetName();
+	return sFullName;
 }
 
 void CClient::PutClient(const CString& sLine) {
 	bool bReturn = false;
 	CString sCopy = sLine;
-	ALLMODULECALL(OnSendToClient(sCopy, *this), &bReturn);
+	NETWORKMODULECALL(OnSendToClient(sCopy, *this), m_pUser, m_pNetwork, this, &bReturn);
 	if (bReturn) return;
 	DEBUG("(" << GetFullName() << ") ZNC -> CLI [" << sCopy << "]");
 	Write(sCopy + "\r\n");
@@ -856,6 +847,25 @@ CString CClient::GetNickMask() const {
 	return GetNick() + "!" + (m_pNetwork ? m_pNetwork->GetBindHost() : m_pUser->GetIdent()) + "@" + sHost;
 }
 
+bool CClient::IsValidIdentifier(const CString& sIdentifier) {
+	// ^[-\w]+$
+
+	if (sIdentifier.empty()) {
+		return false;
+	}
+
+	const char *p = sIdentifier.c_str();
+	while (*p) {
+		if (*p != '_' && *p != '-' && !isalnum(*p)) {
+			return false;
+		}
+
+		p++;
+	}
+
+	return true;
+}
+
 void CClient::RespondCap(const CString& sResponse)
 {
 	PutClient(":irc.znc.in CAP " + GetNick() + " " + sResponse);
@@ -873,7 +883,7 @@ void CClient::HandleCap(const CString& sLine)
 		for (SCString::iterator i = ssOfferCaps.begin(); i != ssOfferCaps.end(); ++i) {
 			sRes += *i + " ";
 		}
-		RespondCap("LS :" + sRes + "userhost-in-names multi-prefix znc.in/server-time-iso znc.in/batch");
+		RespondCap("LS :" + sRes + "userhost-in-names multi-prefix znc.in/server-time-iso znc.in/batch znc.in/self-message");
 		m_bInCap = true;
 	} else if (sSubCmd.Equals("END")) {
 		m_bInCap = false;
@@ -895,7 +905,7 @@ void CClient::HandleCap(const CString& sLine)
 			if (sCap.TrimPrefix("-"))
 				bVal = false;
 
-			bool bAccepted = ("multi-prefix" == sCap) || ("userhost-in-names" == sCap) || ("znc.in/server-time-iso" == sCap) || ("znc.in/batch" == sCap);
+			bool bAccepted = ("multi-prefix" == sCap) || ("userhost-in-names" == sCap) || ("znc.in/server-time-iso" == sCap) || ("znc.in/batch" == sCap) || ("znc.in/self-message" == sCap);
 			GLOBALMODULECALL(IsClientCapSupported(this, sCap, bVal), &bAccepted);
 
 			if (!bAccepted) {
@@ -919,6 +929,8 @@ void CClient::HandleCap(const CString& sLine)
 				m_bServerTime = bVal;
 			} else if ("znc.in/batch" == *it) {
 				m_bBatch = bVal;
+			} else if ("znc.in/self-message" == *it) {
+				m_bSelfMessage = bVal;
 			}
 			GLOBALMODULECALL(OnClientCapRequest(this, *it, bVal), NOTHING);
 
@@ -962,6 +974,10 @@ void CClient::HandleCap(const CString& sLine)
 			m_bBatch = false;
 			ssRemoved.insert("znc.in/batch");
 		}
+		if (m_bSelfMessage) {
+			m_bSelfMessage = false;
+			ssRemoved.insert("znc.in/self-message");
+		}
 		CString sList = "";
 		for (SCString::iterator i = ssRemoved.begin(); i != ssRemoved.end(); ++i) {
 			m_ssAcceptedCaps.erase(*i);
@@ -970,5 +986,49 @@ void CClient::HandleCap(const CString& sLine)
 		RespondCap("ACK :" + sList.TrimSuffix_n(" "));
 	} else {
 		PutClient(":irc.znc.in 410 " + GetNick() + " " + sSubCmd + " :Invalid CAP subcommand");
+	}
+}
+
+void CClient::ParsePass(const CString& sAuthLine) {
+	// [user[@identifier][/network]:]password
+
+	const size_t uColon = sAuthLine.find(":");
+	if (uColon != CString::npos) {
+		m_sPass = sAuthLine.substr(uColon + 1);
+
+		ParseUser(sAuthLine.substr(0, uColon));
+	} else {
+		m_sPass = sAuthLine;
+	}
+}
+
+void CClient::ParseUser(const CString& sAuthLine) {
+	// user[@identifier][/network]
+
+	const size_t uSlash = sAuthLine.rfind("/");
+	if (uSlash != CString::npos) {
+		m_sNetwork = sAuthLine.substr(uSlash + 1);
+
+		ParseIdentifier(sAuthLine.substr(0, uSlash));
+	} else {
+		ParseIdentifier(sAuthLine);
+	}
+}
+
+void CClient::ParseIdentifier(const CString& sAuthLine) {
+	// user[@identifier]
+
+	const size_t uAt = sAuthLine.rfind("@");
+	if (uAt != CString::npos) {
+		const CString sId = sAuthLine.substr(uAt + 1);
+
+		if (IsValidIdentifier(sId)) {
+			m_sIdentifier = sId;
+			m_sUser = sAuthLine.substr(0, uAt);
+		} else {
+			m_sUser = sAuthLine;
+		}
+	} else {
+		m_sUser = sAuthLine;
 	}
 }

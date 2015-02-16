@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2014 ZNC, see the NOTICE file for details.
+ * Copyright (C) 2004-2015 ZNC, see the NOTICE file for details.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,13 @@
 
 #include <znc/zncconfig.h>
 #include <znc/WebModules.h>
+#include <znc/Utils.h>
 #include <znc/Threads.h>
 #include <znc/main.h>
+#include <functional>
 #include <set>
 #include <queue>
+#include <sys/time.h>
 
 // Forward Declarations
 class CAuthBase;
@@ -283,6 +286,7 @@ class CModCommand {
 public:
 	/// Type for the callback function that handles the actual command.
 	typedef void (CModule::*ModCmdFunc)(const CString& sLine);
+	typedef std::function<void(const CString& sLine)> CmdFunc;
 
 	/// Default constructor, needed so that this can be saved in a std::map.
 	CModCommand();
@@ -293,7 +297,8 @@ public:
 	 * @param sArgs Help text describing the arguments to this command.
 	 * @param sDesc Help text describing what this command does.
 	 */
-	CModCommand(const CString& sCmd, ModCmdFunc func, const CString& sArgs, const CString& sDesc);
+	CModCommand(const CString& sCmd, CModule* pMod, ModCmdFunc func, const CString& sArgs, const CString& sDesc);
+	CModCommand(const CString& sCmd, CmdFunc func, const CString& sArgs, const CString& sDesc);
 
 	/** Copy constructor, needed so that this can be saved in a std::map.
 	 * @param other Object to copy from.
@@ -317,15 +322,15 @@ public:
 	void AddHelp(CTable& Table) const;
 
 	const CString& GetCommand() const { return m_sCmd; }
-	ModCmdFunc GetFunction() const { return m_pFunc; }
+	CmdFunc GetFunction() const { return m_pFunc; }
 	const CString& GetArgs() const { return m_sArgs; }
 	const CString& GetDescription() const { return m_sDesc; }
 
-	void Call(CModule *pMod, const CString& sLine) const { (pMod->*m_pFunc)(sLine); }
+	void Call(const CString& sLine) const { m_pFunc(sLine); }
 
 private:
 	CString m_sCmd;
-	ModCmdFunc m_pFunc;
+	CmdFunc m_pFunc;
 	CString m_sArgs;
 	CString m_sDesc;
 };
@@ -631,14 +636,18 @@ public:
 	 *  @param Client The client the buffer is played back to.
 	 *  @param sLine The current line of buffer playback. This is a raw IRC
 	 *               traffic line!
+	 *  @param tv The timestamp of the message.
 	 *  @return See CModule::EModRet.
 	 */
+	virtual EModRet OnChanBufferPlayLine2(CChan& Chan, CClient& Client, CString& sLine, const timeval& tv);
 	virtual EModRet OnChanBufferPlayLine(CChan& Chan, CClient& Client, CString& sLine);
 	/** Called when a line from the query buffer is played back.
 	 *  @param Client The client this line will go to.
 	 *  @param sLine The raw IRC traffic line from the buffer.
+	 *  @param tv The timestamp of the message.
 	 *  @return See CModule::EModRet.
 	 */
+	virtual EModRet OnPrivBufferPlayLine2(CClient& Client, CString& sLine, const timeval& tv);
 	virtual EModRet OnPrivBufferPlayLine(CClient& Client, CString& sLine);
 
 	/** Called when a client successfully logged in to ZNC. */
@@ -926,6 +935,8 @@ public:
 	bool AddCommand(const CModCommand& Command);
 	/// @return True if the command was successfully added.
 	bool AddCommand(const CString& sCmd, CModCommand::ModCmdFunc func, const CString& sArgs = "", const CString& sDesc = "");
+	/// @return True if the command was successfully added.
+	bool AddCommand(const CString& sCmd, const CString& sArgs, const CString& sDesc, std::function<void(const CString& sLine)> func);
 	/// @return True if the command was successfully removed.
 	bool RemCommand(const CString& sCmd);
 	/// @return The CModCommand instance or NULL if none was found.
@@ -1013,7 +1024,7 @@ public:
 	 *  @param Auth The necessary authentication info for this login attempt.
 	 *  @return See CModule::EModRet.
 	 */
-	virtual EModRet OnLoginAttempt(CSmartPtr<CAuthBase> Auth);
+	virtual EModRet OnLoginAttempt(std::shared_ptr<CAuthBase> Auth);
 	/** Called after a client login was rejected.
 	 *  @param sUsername The username that tried to log in.
 	 *  @param sRemoteIP The IP address from which the client tried to login.
@@ -1162,7 +1173,9 @@ public:
 
 	bool OnChanBufferStarting(CChan& Chan, CClient& Client);
 	bool OnChanBufferEnding(CChan& Chan, CClient& Client);
+	bool OnChanBufferPlayLine2(CChan& Chan, CClient& Client, CString& sLine, const timeval& tv);
 	bool OnChanBufferPlayLine(CChan& Chan, CClient& Client, CString& sLine);
+	bool OnPrivBufferPlayLine2(CClient& Client, CString& sLine, const timeval& tv);
 	bool OnPrivBufferPlayLine(CClient& Client, CString& sLine);
 
 	bool OnClientLogin();
@@ -1223,7 +1236,7 @@ public:
 	bool OnAddUser(CUser& User, CString& sErrorRet);
 	bool OnDeleteUser(CUser& User);
 	bool OnClientConnect(CZNCSock* pSock, const CString& sHost, unsigned short uPort);
-	bool OnLoginAttempt(CSmartPtr<CAuthBase> Auth);
+	bool OnLoginAttempt(std::shared_ptr<CAuthBase> Auth);
 	bool OnFailedLogin(const CString& sUsername, const CString& sRemoteIP);
 	bool OnUnknownUserRaw(CClient* pClient, CString& sLine);
 	bool OnClientCapLs(CClient* pClient, SCString& ssCaps);
