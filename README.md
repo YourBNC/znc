@@ -5,6 +5,8 @@ Website: [https://yourbnc.co.uk](https://yourbnc.co.uk)
 Email contact: [mail@yourbnc.co.uk](mailto:mail@yourbnc.co.uk)
 Changelog from ZNC to our current custom build can be found [__here__](https://github.com/YourBNC/znc/compare/znc:master...master).
 
+PLEASE NOTE: THE WEBPANEL USED IS NOT THE ONE FOUND ON THIS REPO.
+
 ##Introduction##
 
 __YourBNC__ is a IRC Bouncer service which is based around you, and only the people.
