@@ -37,7 +37,7 @@ public:
 	void SetHostToVerifySSL(const CString& sHost) { m_HostToVerifySSL = sHost; }
 	CString GetSSLPeerFingerprint() const;
 	void SetSSLTrustedPeerFingerprints(const SCString& ssFPs) { m_ssTrustedFingerprints = ssFPs; }
-	void SetSSLVerifyEnabled(const bool bVerifyDefault = true) { m_bSSLVerifyEnabled = bVerifyDefault; }
+	void SetSSLVerifyEnabled(const bool bVerifyDefault = false) { m_bSSLVerifyEnabled = bVerifyDefault; }
 	double GetSSLVerifyEnabled() const { return m_bSSLVerifyEnabled; }
 
 

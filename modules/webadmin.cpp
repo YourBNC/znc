@@ -886,7 +886,7 @@ public:
 				Tmpl["Action"] = "addnetwork";
 				Tmpl["Title"] = "Add Network for User [" + pUser->GetUserName() + "]";
 				Tmpl["IRCConnectEnabled"] = "true";
-				Tmpl["SSLVerify"] = "true";
+				Tmpl["SSLVerify"] = "false";
 				Tmpl["FloodProtection"] = "true";
 				Tmpl["FloodRate"] = "1.0";
 				Tmpl["FloodBurst"] = "4";
