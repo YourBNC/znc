@@ -89,6 +89,16 @@
 				</div>
 
 				<div class="subsection">
+					<div class="inputlabel">SSL Verification:</div>
+					<div class="checkbox">
+						<input type="checkbox" name="sslverify" id="sslverify_checkbox"
+							   title="Enable or disable SSL certificate verification for this network."
+							<? IF SSLVerify ?>checked="checked"<? ENDIF ?> />
+						<label for="sslverify_checkbox">Enabled</label>
+					</div>
+				</div>
+
+				<div class="subsection">
 					<div class="inputlabel">Flood protection:</div>
 					<div class="checkbox">
 						<input type="checkbox" name="floodprotection" id="floodprotection_checkbox"
