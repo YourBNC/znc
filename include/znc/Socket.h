@@ -37,6 +37,9 @@ public:
 	void SetHostToVerifySSL(const CString& sHost) { m_HostToVerifySSL = sHost; }
 	CString GetSSLPeerFingerprint() const;
 	void SetSSLTrustedPeerFingerprints(const SCString& ssFPs) { m_ssTrustedFingerprints = ssFPs; }
+	void SetSSLVerifyEnabled(const bool bVerifyDefault = false) { m_bSSLVerifyEnabled = bVerifyDefault; }
+	double GetSSLVerifyEnabled() const { return m_bSSLVerifyEnabled; }
+
 
 #ifndef HAVE_ICU
 	// Don't fail to compile when ICU is not enabled
@@ -54,6 +57,7 @@ private:
 	CString m_HostToVerifySSL;
 	SCString m_ssTrustedFingerprints;
 	SCString m_ssCertVerificationErrors;
+	bool m_bSSLVerifyEnabled;
 };
 
 enum EAddrType {

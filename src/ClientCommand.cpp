@@ -1523,6 +1523,29 @@ void CClient::UserCommand(CString& sLine) {
 	} else if (m_pUser->IsAdmin() &&
 			(sCommand.Equals("LISTPORTS") || sCommand.Equals("ADDPORT") || sCommand.Equals("DELPORT"))) {
 		UserPortCommand(sLine);
+	} else if (sCommand.Equals("SETSSLVERIFY")) {
+		if (!m_pNetwork) {
+			PutStatus("You must be connected with a network to use this command");
+			return;
+		}
+
+		CString sNewValue = sLine.Token(1);
+
+		if (sNewValue.empty()) {
+			PutStatus("Usage: SetSSLVerify <true/false>");
+			return;
+		}
+
+		m_pNetwork->SetIRCSSLVerifyEnabled(sNewValue.ToBool());
+
+		PutStatus("The SSLVerify option has been set for this network. Please reconnect using the 'disconnect' and 'connect' commands for it to take effect.");
+	} else if (sCommand.Equals("GETSSLVERIFY")) {
+		if (!m_pNetwork) {
+			PutStatus("You must be connected with a network to use this command");
+			return;
+		}
+
+		PutStatus("SSLVerify = " + CString(m_pNetwork->GetIRCSSLVerifyEnabled()));
 	} else {
 		PutStatus("Unknown command [" + sCommand + "] try 'Help'");
 	}
@@ -1689,6 +1712,9 @@ void CClient::HelpUser(const CString& sFilter) {
 	AddCommandHelp(Table, "ClearAllChannelBuffers", "", "Clear the channel buffers", sFilter);
 	AddCommandHelp(Table, "ClearAllQueryBuffers", "", "Clear the query buffers", sFilter);
 	AddCommandHelp(Table, "SetBuffer", "<#chan|query> [linecount]", "Set the buffer count", sFilter);
+
+	AddCommandHelp(Table, "SetSSLVerify", "<true/false>", "Sets the SSLVerify option. This options enables or disables ssl certificate verification for the current network.", sFilter);
+	AddCommandHelp(Table, "GetSSLVerify", "", "Gets the current value of the SSLVerify property.", sFilter);
 
 	if (m_pUser->IsAdmin()) {
 		AddCommandHelp(Table, "AddBindHost", "<host (IP preferred)>", "Adds a bind host for normal users to use", sFilter);

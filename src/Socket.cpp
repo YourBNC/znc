@@ -96,6 +96,12 @@ void CZNCSock::SSLHandShakeFinished() {
 		return;
 	}
 
+	if (!GetSSLVerifyEnabled())
+	{
+		DEBUG(GetSockName() + ": SSL Verification disabled.");
+		return;
+	}
+
 	X509* pCert = GetX509();
 	if (!pCert) {
 		DEBUG(GetSockName() + ": No cert");

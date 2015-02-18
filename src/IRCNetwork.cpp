@@ -352,6 +352,7 @@ bool CIRCNetwork::ParseConfig(CConfig *pConfig, CString& sError, bool bUpgrade) 
 		size_t numStringOptions = sizeof(StringOptions) / sizeof(StringOptions[0]);
 		TOption<bool> BoolOptions[] = {
 			{ "ircconnectenabled", &CIRCNetwork::SetIRCConnectEnabled },
+			{ "sslverify", &CIRCNetwork::SetIRCSSLVerifyEnabled },
 		};
 		size_t numBoolOptions = sizeof(BoolOptions) / sizeof(BoolOptions[0]);
 		TOption<double> DoubleOptions[] = {
@@ -506,6 +507,7 @@ CConfig CIRCNetwork::ToConfig() const {
 	}
 
 	config.AddKeyValuePair("IRCConnectEnabled", CString(GetIRCConnectEnabled()));
+	config.AddKeyValuePair("SSLVerify", CString(GetIRCSSLVerifyEnabled()));
 	config.AddKeyValuePair("FloodRate", CString(GetFloodRate()));
 	config.AddKeyValuePair("FloodBurst", CString(GetFloodBurst()));
 	config.AddKeyValuePair("JoinDelay", CString(GetJoinDelay()));
@@ -1212,6 +1214,7 @@ bool CIRCNetwork::Connect() {
 	CIRCSock *pIRCSock = new CIRCSock(this);
 	pIRCSock->SetPass(pServer->GetPass());
 	pIRCSock->SetSSLTrustedPeerFingerprints(m_ssTrustedFingerprints);
+	pIRCSock->SetSSLVerifyEnabled(GetIRCSSLVerifyEnabled());
 
 	DEBUG("Connecting user/network [" << m_pUser->GetUserName() << "/" << m_sName << "]");
 

@@ -188,6 +188,9 @@ public:
 	unsigned short int GetJoinDelay() const { return m_uJoinDelay; }
 	void SetJoinDelay(unsigned short int uJoinDelay) { m_uJoinDelay = uJoinDelay; }
 
+	void SetIRCSSLVerifyEnabled(const bool bVerifyDefault = false) { m_bIRCSSLVerifyEnabled = bVerifyDefault; }
+	bool GetIRCSSLVerifyEnabled() const { return m_bIRCSSLVerifyEnabled; }
+
 	CString ExpandString(const CString& sStr) const;
 	CString& ExpandString(const CString& sStr, CString& sRet) const;
 private:
@@ -219,6 +222,7 @@ protected:
 	CString            m_sChanPrefixes;
 
 	bool               m_bIRCConnectEnabled;
+	bool               m_bIRCSSLVerifyEnabled;
 	CString            m_sIRCServer;
 	std::vector<CServer*>   m_vServers;
 	size_t             m_uServerIdx; ///< Index in m_vServers of our current server + 1

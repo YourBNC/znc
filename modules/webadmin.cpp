@@ -835,6 +835,8 @@ public:
 
 				Tmpl["QuitMsg"] = pNetwork->GetQuitMsg();
 
+				Tmpl["SSLVerify"] = CString(pNetwork->GetIRCSSLVerifyEnabled());
+
 				Tmpl["FloodProtection"] = CString(CIRCSock::IsFloodProtected(pNetwork->GetFloodRate()));
 				Tmpl["FloodRate"] = CString(pNetwork->GetFloodRate());
 				Tmpl["FloodBurst"] = CString(pNetwork->GetFloodBurst());
@@ -884,6 +886,7 @@ public:
 				Tmpl["Action"] = "addnetwork";
 				Tmpl["Title"] = "Add Network for User [" + pUser->GetUserName() + "]";
 				Tmpl["IRCConnectEnabled"] = "true";
+				Tmpl["SSLVerify"] = "false";
 				Tmpl["FloodProtection"] = "true";
 				Tmpl["FloodRate"] = "1.0";
 				Tmpl["FloodBurst"] = "4";
@@ -963,6 +966,8 @@ public:
 		pNetwork->SetQuitMsg(WebSock.GetParam("quitmsg"));
 
 		pNetwork->SetIRCConnectEnabled(WebSock.GetParam("doconnect").ToBool());
+
+		pNetwork->SetIRCSSLVerifyEnabled(WebSock.GetParam("sslverify").ToBool());
 
 		sArg = WebSock.GetParam("bindhost");
 		// To change BindHosts be admin or don't have DenySetBindHost
