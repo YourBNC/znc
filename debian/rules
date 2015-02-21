@@ -33,7 +33,7 @@ override_dh_auto_install:
 
 override_dh_python3:
 	dh_python3 \
-		-p znc-python \
+		-p yourbnc-znc-python \
 		--exclude=znc.py \
 		--exclude=znc_core.py
 
@@ -41,4 +41,4 @@ override_dh_install:
 	dh_install --list-missing
 
 override_dh_strip:
-	dh_strip --dbg-package=znc-dbg
+	dh_strip --dbg-package=yourbnc-znc-dbg

@@ -54,3 +54,6 @@ home/yourbnc/BNC/lib/znc/certauth.so home/yourbnc/BNC/lib/znc/
 home/yourbnc/BNC/lib/znc/clearbufferonmsg.so /home/yourbnc/BNC/lib/znc/
 home/yourbnc/BNC/lib/znc/cert.so home/yourbnc/BNC/lib/znc/
 home/yourbnc/BNC/lib/znc/modules_online.so home/yourbnc/BNC/lib/znc/
+home/yourbnc/BNC/lib/znc/privmsg.so home/yourbnc/BNC/lib/znc/
+home/yourbnc/BNC/lib/znc/privmsg_prefix.so home/yourbnc/BNC/lib/znc/
+home/yourbnc/BNC/lib/znc/alias.so home/yourbnc/BNC/lib/znc/
