@@ -188,7 +188,7 @@ public:
 	unsigned short int GetJoinDelay() const { return m_uJoinDelay; }
 	void SetJoinDelay(unsigned short int uJoinDelay) { m_uJoinDelay = uJoinDelay; }
 
-	void SetIRCSSLVerifyEnabled(const bool bVerifyDefault = false) { m_bIRCSSLVerifyEnabled = bVerifyDefault; }
+	void SetIRCSSLVerifyEnabled(const bool bVerifyDefault = true) { m_bIRCSSLVerifyEnabled = bVerifyDefault; }
 	bool GetIRCSSLVerifyEnabled() const { return m_bIRCSSLVerifyEnabled; }
 
 	CString ExpandString(const CString& sStr) const;

@@ -127,6 +127,8 @@ CIRCNetwork::CIRCNetwork(CUser *pUser, const CString& sName) {
 
 	m_uJoinDelay = 0;
 
+	SetIRCSSLVerifyEnabled(false);
+
 	m_RawBuffer.SetLineCount(100, true);   // This should be more than enough raws, especially since we are buffering the MOTD separately
 	m_MotdBuffer.SetLineCount(200, true);  // This should be more than enough motd lines
 	m_NoticeBuffer.SetLineCount(250, true);
@@ -157,6 +159,8 @@ CIRCNetwork::CIRCNetwork(CUser *pUser, const CIRCNetwork &Network) {
 	m_MotdBuffer.SetLineCount(200, true);  // This should be more than enough motd lines
 	m_NoticeBuffer.SetLineCount(250, true);
 
+	SetIRCSSLVerifyEnabled(false);
+
 	Clone(Network);
 }
 
@@ -176,6 +180,7 @@ void CIRCNetwork::Clone(const CIRCNetwork& Network, bool bCloneName) {
 	SetBindHost(Network.GetBindHost());
 	SetEncoding(Network.GetEncoding());
 	SetQuitMsg(Network.GetQuitMsg());
+	SetIRCSSLVerifyEnabled(Network.GetIRCSSLVerifyEnabled());
 	m_ssTrustedFingerprints = Network.m_ssTrustedFingerprints;
 
 	// Servers

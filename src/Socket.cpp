@@ -47,6 +47,7 @@ CZNCSock::CZNCSock(int timeout) : Csock(timeout) {
 		sCipher = ZNC_DefaultCipher();
 	}
 	SetCipher(sCipher);
+	SetSSLVerifyEnabled(true);
 #endif
 }
 
@@ -55,6 +56,7 @@ CZNCSock::CZNCSock(const CString& sHost, u_short port, int timeout) : Csock(sHos
 	DisableSSLCompression();
 	FollowSSLCipherServerPreference();
 	DisableSSLProtocols(CZNC::Get().GetDisabledSSLProtocols());
+	SetSSLVerifyEnabled(true);
 #endif
 }
 
