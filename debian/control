@@ -16,7 +16,7 @@ XSBC-Original-Maintainer: Patrick Matthäi <pmatthaei@debian.org>
 Standards-Version: 3.9.6
 Homepage: http://znc.sourceforge.net/
 
-Package: znc
+Package: yourbnc-znc
 Architecture: any
 Depends: ${shlibs:Depends},
  ${misc:Depends}
@@ -40,7 +40,7 @@ Description: advanced modular IRC bouncer
  while you were detached, SSL encryption, DCC proxying, and a plugin
  interface with many plugins supporting other features.
 
-Package: znc-dbg
+Package: yourbnc-znc-dbg
 Section: debug
 Architecture: any
 Priority: extra
@@ -62,7 +62,7 @@ Description: advanced modular IRC bouncer (debugging symbols)
  .
  This package contains the debugging symbols of the znc package and his modules.
 
-Package: znc-dev
+Package: yourbnc-znc-dev
 Architecture: any
 Depends: ${misc:Depends},
  znc (>= ${binary:Version}),
@@ -82,7 +82,7 @@ Description: advanced modular IRC bouncer (development headers)
  .
  This package contains the znc development headers for developing modules.
 
-Package: znc-perl
+Package: yourbnc-znc-perl
 Architecture: any
 Depends: ${shlibs:Depends},
  ${misc:Depends},
@@ -101,7 +101,7 @@ Description: advanced modular IRC bouncer (Perl extension)
  .
  This package contains the znc Perl extension.
 
-Package: znc-python
+Package: yourbnc-znc-python
 Architecture: any
 Depends: ${misc:Depends},
  ${shlibs:Depends},
@@ -120,7 +120,7 @@ Description: advanced modular IRC bouncer (Python extension)
  .
  This package contains the znc Python extension.
 
-Package: znc-tcl
+Package: yourbnc-znc-tcl
 Section: interpreters
 Architecture: any
 Depends: ${shlibs:Depends},

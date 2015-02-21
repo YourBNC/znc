@@ -1,0 +1,4 @@
+home/yourbnc/BNC/include/znc home/yourbnc/BNC/include/
+home/yourbnc/BNC/lib/pkgconfig/* home/yourbnc/BNC/lib/pkgconfig/
+home/yourbnc/BNC/bin/znc-buildmod home/yourbnc/BNC/bin/
+home/yourbnc/BNC/share/man/man1/znc-buildmod.1.gz home/yourbnc/BNC/share/man/man1/

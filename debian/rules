@@ -12,8 +12,8 @@ DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 CXXFLAGS := -g -DVERSION_EXTRA=\"+deb$(shell head -1 debian/changelog | sed 's/.*(//;s/).*//;s/.*-//')\"
 
 DEB_CONFIGURE_EXTRA_FLAGS := \
-	--prefix=/usr \
-	--libdir=/usr/lib \
+	--prefix=/home/yourbnc/BNC \
+	--libdir=/home/yourbnc/BNC/lib \
 	--enable-tcl \
 	--enable-cyrus \
 	--enable-perl \

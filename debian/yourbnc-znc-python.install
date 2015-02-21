@@ -1,0 +1,4 @@
+home/yourbnc/BNC/lib/znc/modpython.so home/yourbnc/BNC/lib/znc/
+home/yourbnc/BNC/lib/znc/modpython/znc.py home/yourbnc/BNC/lib/znc/modpython/
+home/yourbnc/BNC/lib/znc/modpython/_znc_core.so home/yourbnc/BNC/lib/znc/modpython/
+home/yourbnc/BNC/lib/znc/modpython/znc_core.py home/yourbnc/BNC/lib/znc/modpython/
