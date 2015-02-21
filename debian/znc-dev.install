@@ -1,0 +1,4 @@
+usr/include/znc usr/include/
+usr/lib/pkgconfig/* usr/lib/pkgconfig/
+usr/bin/znc-buildmod usr/bin/
+usr/share/man/man1/znc-buildmod.1.gz usr/share/man/man1/

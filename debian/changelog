@@ -1,0 +1,835 @@
+znc (1.6.0-git-1) unstable; urgency=high
+
+  * Fixed SSLVerify
+
+ -- Roelf Wichertjes <contact@roelf.org>  Fri, 21 Feb 2015 15:50:00 +0100
+
+znc (1.6.0-1~ubuntu14.04.0) trusty; urgency=medium
+
+  * Initial upload for Trusty
+
+ -- Thomas Ward <teward@ubuntu.com>  Sat, 14 Feb 2015 17:30:31 -0500
+
+znc (1.6.0-1) experimental; urgency=low
+
+  * New upstream release.
+    Closes: #778335
+    - Remove merged patch 01-cipher-disable.
+    - Bump build depends to swig3.0.
+    - Add libicu-dev build dependency for charset support.
+    - charset.so module has been removed.
+  * Fix some file locations in debian/copyright.
+    Closes: #775587
+  * Remove deprecated hardening-wrapper.
+  * Bump Standards-Version to 3.9.6 (no changes required).
+  * Drop deprecated build dependency python-support.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 14 Feb 2015 17:57:30 +0100
+
+znc (1.4-2) unstable; urgency=low
+
+  * Add patch 01-cipher-disable which adds support for disabling specific
+    ciphers like SSLv2 or SSLv3.
+    Closes: #766957
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Thu, 18 Dec 2014 20:32:53 +0100
+
+znc (1.4-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Drop merged patch 01-webadmin-dos.
+    - Upstream provides a changelog now. Remove lintian overrides.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 09 May 2014 09:55:57 +0200
+
+znc (1.2-4) unstable; urgency=high
+
+  * Add patch 01-webadmin-dos to fix a DoS in the webadmin module.
+    Closes: #744712
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Tue, 15 Apr 2014 09:59:34 +0200
+
+znc (1.2-3) unstable; urgency=low
+
+  * znc binary was gone, whops.
+    Closes: #732154
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 16 Dec 2013 12:39:00 +0100
+
+znc (1.2-2) unstable; urgency=low
+
+  * Merged znc-extra package into znc.
+    Closes: #731297
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Thu, 12 Dec 2013 10:16:58 +0100
+
+znc (1.2-1) unstable; urgency=low
+
+  * New upstream release.
+    Closes: #728786
+    - Remove merged patch 01-spelling-error.
+    - Remove merged patch 02-CVE-2013-2130.
+    - License has been changed to Apache-2.0.
+    - Disable new tests, because they require an internet connection.
+    - Add new znc-extra module modules_online.
+    - Remove AUTHORS file.
+  * Bump Standards-Version to 3.9.5 (no changes needed).
+  * Don't explicitly request xz compression - dpkg 1.17 does this by default.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 08 Nov 2013 13:13:58 +0100
+
+znc (1.0-5) unstable; urgency=medium
+
+  * Add upstream patch 02-CVE-2013-2130 to fix a NULL pointer dereference in
+    the webadmin module as described in CVE-2013-2130.
+    Closes: #720632
+  * Remove deprecated dh_pysupport.
+  * Remove unused hardening-no-fortify-functions lintian overrides.
+  * Add some lintian overrides for false positive spelling errors.
+  * Remove both .pyc files and hope that the Python module is still working.
+  * Limit dh_python3 to package znc-python. This helper is doing some realy
+    strange things.
+  * Remove python:Depends.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 26 Aug 2013 11:21:18 +0200
+
+znc (1.0-4) unstable; urgency=low
+
+  * Change section from znc-tcl to interpreters.
+  * Uploading to unstable.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 06 May 2013 09:18:27 +0200
+
+znc (1.0-3) experimental; urgency=low
+
+  * Remove dependency reference on removed znc-webadmin package at znc-dbg.
+  * Migrate package to minimal debhelper.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 31 Dec 2012 10:23:08 +0100
+
+znc (1.0-2) experimental; urgency=low
+
+  * Recommend g++ at the znc-dev package.
+    Closes: #694984
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 12 Dec 2012 11:07:27 +0100
+
+znc (1.0-1) experimental; urgency=low
+
+  * New upstream release.
+    - Remove merged patch 01-swig-wrapper.
+    - Remove znc-extra modules antiidle, droproot, fakeonline and motdfile.
+    - Remove znc module email.
+    - Remove deprecated --enable-extra configure option.
+    - Remove znc-config binary from znc-dev package.
+    - znc module away has been renamed to awaystore.
+    - znc module admin has been renamed to controlpanel.
+    - znc-extra module saslauth has been renamed to sasl.
+    - Drop c-ares dependency, it is not used anymore.
+    - Add znc-extra module cyrusauth.
+    - Add znc module missingmotd.
+    - Add patch 01-spelling-error to fix an spelling error in the blockuser
+      module.
+  * Bump Standards-Version to 3.9.4 (no changes needed).
+  * Switch to xz compression and add a Pre-Depends on dpkg.
+  * Wrap configure options in debian/rules.
+  * Adjust lintian warnings for hardening-no-fortify-functions.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 12 Nov 2012 12:34:34 +0100
+
+znc (0.206-2) unstable; urgency=high
+
+  * Add patch 01-swig-wrapper from Torsten Landschoff, which workarounds a
+    regression in swig causing znc to FTBFS.
+    Closes: #672035
+  * Overwrite some false positive hardening-no-fortify-functions lintian
+    warnings.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 30 May 2012 18:54:05 +0200
+
+znc (0.206-1) unstable; urgency=low
+
+  * New upstream release.
+  * Remove note about not existing znc.conf.gz example.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 06 Apr 2012 20:42:26 +0200
+
+znc (0.204-2) unstable; urgency=low
+
+  * Bump Standards-Version to 3.9.3 (no changes needed).
+  * Overwrite lintian warning no-upstream-changelog.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 25 Feb 2012 22:01:10 +0100
+
+znc (0.204-1) unstable; urgency=low
+
+  * New upstream release.
+    - Drop patch 01-fix-bouncedcc-dos, it is included in this release.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 25 Jan 2012 15:03:14 +0100
+
+znc (0.202-2) unstable; urgency=medium
+
+  * Do not remove the required .py and .pyc files from the znc-python package.
+  * Add upstream patch 01-fix-bouncedcc-dos to fix a DoS in the bouncedcc
+    module.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 07 Jan 2012 14:58:09 +0100
+
+znc (0.202-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 24 Sep 2011 23:07:01 +0200
+
+znc (0.200-1) unstable; urgency=high
+
+  * New upstream release.
+    - Remove merged patch 01-fix-opensslv2-ftbfs.diff.
+    - Adjust some new module paths.
+  * Build against most recent swig version. Do not bump build dependency to it,
+    since it would complicate backports. Also add swig as build dependency.
+    Closes: #634531
+  * Add missing build-arch and build-indep target.
+  * Wrap control lines.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 27 Aug 2011 00:12:40 +0200
+
+znc (0.098-2) unstable; urgency=high
+
+  * Add upstream patch 01-fix-opensslv2-ftbfs.diff, which fixes a FTBFS, if
+    openssl is compiled without SSLv2 support.
+    Closes: #620777
+  * Build with VERBOSE=1.
+  * Bump Standards-Version to 3.9.2 (no changes needed).
+  * Switch to swig2.0.
+  * Build with hardening-wrapper.
+  * Again adjust debian/watch.
+  * Fix lintian warning description-synopsis-starts-with-article.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 04 May 2011 20:45:07 +0200
+
+znc (0.098-1) unstable; urgency=low
+
+  * New upstream release.
+    - Build with the new python module.
+    - README has been renamed to README.md.
+    - Add new files to the znc-perl and znc package.
+  * Bump to debhelper version 7.
+    - Replace dh_clean -k by dh_prep.
+  * Wrap build dependencies.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 30 Mar 2011 22:11:34 +0200
+
+znc (0.096-3) unstable; urgency=low
+
+  * Adjust debian/watch to the new tarball location.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Thu, 10 Mar 2011 20:29:48 +0100
+
+znc (0.096-2) unstable; urgency=low
+
+  * Merge 0.092-3~bpo50+1 changelog.
+  * Upload to unstable.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sun, 06 Feb 2011 17:41:38 +0100
+
+znc (0.096-1) experimental; urgency=low
+
+  * New upstream release.
+    - Pass --enable-perl to configure.
+    - Add new build dependency swig.
+    - Add new modules and required files.
+  * Do not recommend znc in additional packages, depend on the binary:Version,
+    so that incompatible versions could not be mixed.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 08 Nov 2010 20:01:04 +0100
+
+znc (0.094-1) experimental; urgency=low
+
+  * New upstream release.
+    - Remove all patches, they are merged by upstream.
+  * Bump Standards-Version to 3.9.1 (no changes needed).
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sun, 29 Aug 2010 21:07:49 +0200
+
+znc (0.092-3~bpo50+1) lenny-backports; urgency=low
+
+  * Rebuild for lenny-backports.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Tue, 23 Nov 2010 17:25:06 +0100
+
+znc (0.092-3) unstable; urgency=medium
+
+  * Add patch 04-null-pointer-dereference.diff from upstream, which fixes an
+    NULL pointer dereference in the route_replies module.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 18 Aug 2010 19:24:22 +0200
+
+znc (0.092-2) unstable; urgency=medium
+
+  * Merge 0.092-1~bpo50+1 changelog.
+  * Add upstream patch 01-out-of-range-error.diff, which fixes a DoS from
+    authenticated users.
+    Closes: #592064
+  * Add upstream patch 02-inc-port-in-cookie.diff, which adds the port number
+    of the znc instance to the cookie name, to avoid cookie clashes with more
+    than a single znc instance per IP and user.
+  * Add upstream patch 03-attach-channels-on-joining.diff, which ensures, that
+    channels are always attached on joining them.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 16 Aug 2010 21:08:17 +0200
+
+znc (0.092-1~bpo50+1) lenny-backports; urgency=low
+
+  * Rebuild for lenny-backports.
+    - Revert the 3.0 (quilt) format.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 16 Jul 2010 20:41:22 +0200
+
+znc (0.092-1) unstable; urgency=low
+
+  * New upstream release.
+    - Remove 01-null-pointer-traffic.diff, merged by upstream.
+  * Bump Standards-Version to 3.9.0.
+    - Use Breaks instead of Conflicts in some situations.
+    - Fix BSD license in debian/copyright.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 03 Jul 2010 13:00:20 +0200
+
+znc (0.090-2) unstable; urgency=high
+
+  * Add patch 01-null-pointer-traffic.diff, which fixes a NULL pointer
+    dereference in the traffic stats.
+    Closes: #584929
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 14 Jun 2010 18:05:43 +0200
+
+znc (0.090-1) unstable; urgency=low
+
+  * New usptream release.
+  * Add missing replaces to the znc package against the removed znc-webadmin
+    one.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 07 Jun 2010 22:00:41 +0200
+
+znc (0.090~rc1-1) unstable; urgency=low
+
+  * New upstream release candidate.
+    - Drop znc-webadmin package. It is now provided in the core source code.
+    - Rename discon_kick module to disconkick.
+    - Add charset and notes module.
+  * Add missing dependency on libc-ares-dev to znc-dev.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 24 May 2010 18:05:44 +0200
+
+znc (0.080-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Thu, 18 Feb 2010 14:03:34 +0100
+
+znc (0.080~rc1-1) unstable; urgency=low
+
+  * New upstream release candidate.
+    - Add new modules flooddetach, clientnotify and block_motd.
+  * Merge 0.078-1~bpo50+1 changelog.
+  * Bump Standards-Version to 3.8.4 (no changes needed).
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Tue, 16 Feb 2010 14:26:58 +0100
+
+znc (0.078-1~bpo50+1) lenny-backports; urgency=low
+
+  * Rebuild for lenny-backports.
+  * Do not use the 3.0 (quilt) format.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Wed, 30 Dec 2009 12:35:33 +0100
+
+znc (0.078-1) unstable; urgency=low
+
+  * New upstream release.
+    - connect_throttle module has been dropped.
+    - Remove dropped znc.conf from examples.
+  * Merge 0.076-1~bpo50+1 changelog.
+  * Convert package to the 3.0 (quilt) format.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 19 Dec 2009 15:58:51 +0100
+
+znc (0.076-1~bpo50+1) lenny-backports; urgency=low
+
+  * Rebuild for lenny-backports.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Tue, 24 Nov 2009 19:19:09 +0100
+
+znc (0.076-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 25 Sep 2009 08:07:42 +0200
+
+znc (0.076~rc1-1) unstable; urgency=low
+
+  * New upstream release candidate.
+  * Fix long description of znc-extra. Tcl is not anymore part of it.
+  * Enable building of the saslauth module with patch from Miguelangel Jose
+    Freitas Loreto and install it to the znc-extra package.
+    Closes: #547333
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 21 Sep 2009 11:26:15 +0200
+
+znc (0.076~beta1-1) unstable; urgency=low
+
+  * New upstream beta release.
+    - znc-extra has been merged in the main znc tree. Build and install them to
+      the new znc-extra package.
+    - Install the Tcl module to the znc-tcl package.
+  * s/perl/Perl/ in long description of the znc-perl package.
+  * Conflict again the old znc-extra-dbg package at znc-dbg.
+  * Use dh_install with --list-missing, so I do not forget an module.
+  * Bump Standards-Version to 3.8.3 (no changes needed).
+  * Add missing licenses.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sun, 13 Sep 2009 12:27:48 +0200
+
+znc (0.074-2) unstable; urgency=low
+
+  * Merge 0.045-3+etch2, 0.045-3+etch3, 0.074-1~bpo40+1 and 0.074-1~bpo50+1
+    changelog.
+  * Add versioned recommends on znc-extra.
+    Closes: #541305
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Thu, 13 Aug 2009 18:59:00 +0200
+
+znc (0.074-1~bpo50+1) lenny-backports; urgency=low
+
+  * Rebuild for lenny-backports.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Tue, 04 Aug 2009 18:02:00 +0200
+
+znc (0.074-1~bpo40+1) etch-backports; urgency=low
+
+  * Rebuild for etch-backports.
+    - Drop libc-ares-dev build dependency, we do not have it on Etch.
+    - Also disable it in debian/rules.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Tue, 04 Aug 2009 18:10:55 +0200
+
+znc (0.074-1) unstable; urgency=high
+
+  * New upstream release.
+    - Bump urgency to high. This release fixes an high-impact directory
+      traversal buf, where unpriviliged users can save about DCC SEND files on
+      the server with the rights of the znc process. The attacker could also
+      use the exploit to get a shell on the server.
+      Closes: #537977
+    - Use c-ares for DNS resolving, add libc-ares-dev and pkg-config as
+      build-dependency.
+  * Merge 0.058-2+lenny2, 0.058-2+lenny3, 0.070-1~bpo40+1 and 0.070-1~bpo50+1
+    changelog.
+  * Bump Standards-Version to 3.8.2 (no changes needed).
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 24 Jul 2009 13:46:00 +0200
+
+znc (0.070-1~bpo50+1) lenny-backports; urgency=low
+
+  * Rebuild for lenny-backports.
+  * Remove recommend from znc to non-existent package znc-extra in Lenny.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 01 Jun 2009 11:49:09 +0200
+
+znc (0.070-1~bpo40+1) etch-backports; urgency=low
+
+  * Rebuild for etch-backports.
+  * Remove recommend from znc to non-existent package znc-extra in Etch.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Mon, 01 Jun 2009 11:46:00 +0200
+
+znc (0.070-1) unstable; urgency=low
+
+  * New upstream release.
+    - Add new pkgconfig files to znc-dev.
+  * Fix typo in get-orig-source target.
+  * Merge 0.058-2~bpo40+1 and 0.058-2~bpo40+2 changelog.
+  * Add recommends on the new source package znc-extra.
+  * Add my own copyright for the Debian packaging.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 23 May 2009 16:17:47 +0200
+
+znc (0.068-3) unstable; urgency=low
+
+  * Change my email address.
+  * Remove DM-Upload-Allowed control field.
+  * Add new fail2ban module.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Thu, 23 Apr 2009 13:27:00 +0200
+
+znc (0.068-2) unstable; urgency=low
+
+  * Add missing admin module.
+    Closes: #522267
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Thu,  2 Apr 2009 11:08:41 +0200
+
+znc (0.068-1) unstable; urgency=low
+
+  * New upstream release.
+  * Bump Standards-Version to 3.8.1 (no changes needed).
+  * Change section of znc-dbg to debug.
+  * Add changelog from the 0.058-2+lenny1 upload.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sun, 29 Mar 2009 20:39:44 +0200
+
+znc (0.066-1) unstable; urgency=high
+
+  * New upstream release.
+    - Severity high because it fixes a critical security flaw.
+      Closes: #516950
+  * znc-dev has to be arch:any, because it also gives back the used host
+    compiler.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Tue, 24 Feb 2009 18:21:42 +0200
+
+znc (0.064-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add get-orig-source target.
+  * Add missing dependencie from znc-dev to libssl-dev. znc modules will not
+    build without libssl-dev.
+  * Fix link to the GPL file.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Tue, 17 Feb 2009 18:22:22 +0200
+
+znc (0.062-2) unstable; urgency=low
+
+  * Add missing ${misc:Depends}. Thanks lintian.
+  * Fix debian/watch, so that it does not take the new znc-extra tarball.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sat,  6 Dec 2008 23:28:22 +0200
+
+znc (0.062-1) unstable; urgency=low
+
+  * New upstream release.
+    - Add new autocycle, keepnick and q modules.
+    - IPv6 is now enabled by default.
+    - Remove 01-fix-gcc4.4-ftbfs (merged upstream).
+  * Uploading to unstable.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sat,  6 Dec 2008 14:24:45 +0200
+
+znc (0.060-2) experimental; urgency=low
+
+  * Add upstream patch from svn r1269 to fix a FTBFS with gcc 4.4.
+    Closes: #504946
+  * Split up package to znc-dev, znc-perl and znc-webadmin to avoid on  some
+    installations useless dependencies and the installation of the potential
+    more dangerous webadmin module - the user now has to install it manually.
+  * Provide debugging symbols in znc-dbg.
+  * Provide znc.conf as example and added some docs.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Mon, 17 Nov 2008 11:35:59 +0200
+
+znc (0.060-1) experimental; urgency=low
+
+  * New upstream release.
+    - Drop dpatch and applied patches - they have been merged in upstream.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sat, 13 Sep 2008 19:18:59 +0200
+
+znc (0.058-2+lenny3) stable-security; urgency=high
+
+  * Fixes an high-impact directory traversal bug, where unprivileged users can
+    save about DCC SEND files on the server with the rights of the znc process.
+    The attacker could also use the exploit to get a shell on the server.
+    Closes: #537977
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 24 Jul 2009 10:59:59 +0200
+
+znc (0.058-2+lenny2) stable; urgency=low
+
+  * Add 03-crash-deleted-user.dpatch, which fixes a possible crash if users are
+    deleted.
+    If a user is deleted while it is trying to connect to an IRC server, the
+    IRC socket wasn't deleted together with the user. At some later point in
+    time, the IRC socket will try to use the user object, which was already
+    freed by now.
+    Closes: #536489
+   * Change my email address.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Fri, 10 Jul 2009 12:20:16 +0200
+
+znc (0.058-2+lenny1) stable-security; urgency=low
+
+  * Add 02-webmin-priv-escalation.dpatch which properly handle newlines in
+    CHTTPSock::GetParam() and strip them out. This patch fixes an important
+    privilege escalation.
+    Closes: #516950
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Wed,  4 Mar 2009 11:55:21 +0200
+
+znc (0.058-2~bpo40+2) etch-backports; urgency=high
+
+  * Add 02-webmin-priv-escalation.dpatch which properly handle newlines in
+    CHTTPSock::GetParam() and strip them out. This patch fixes an important
+    privilege escalation.
+    Closes: #516950
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Wed, 11 Mar 2009 08:30:18 +0200
+
+znc (0.058-2~bpo40+1) etch-backports; urgency=low
+
+  * Rebuild for etch-backports.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sun, 11 Jan 2009 12:38:24 +0200
+
+znc (0.058-2) unstable; urgency=low
+
+  * Implemented dpatch.
+  * Add 01-emb_perl-sys-init3.dpatch patch from upstream svn (r1155-r1158).
+    Closes: #495076
+  * Merge debian/changelog from the stable 0.045-3+etch1 upload.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sun, 17 Aug 2008 19:50:11 +0200
+
+znc (0.058-1) unstable; urgency=high
+
+  * New upstream release.
+    - Bumping urgency to high, because this release fixes a local privilege
+      escalation. For more informations see svn commit 1113 on the upstream
+      subversion repository. This bug does not exist in the stable version.
+  * Removed note on a not existing file in README.Debian.
+  * Removed the indefinite article "an" from the short description.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Thu, 10 Jul 2008 14:02:50 +0200
+
+znc (0.056+svn1109-1) unstable; urgency=low
+
+  * New upstream svn snapshot.
+  * Add VERSION_EXTRA CXXFLAGS which appends the Debian revision to the
+    internal version of znc.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sat, 28 Jun 2008 11:35:47 +0200
+
+znc (0.056+svn1093-1) unstable; urgency=low
+
+  * New upstream svn snapshot.
+    - Manpages have been added.
+      Closes: #411500
+    - The README now also describes two options which are unclear for most
+      users.
+      Closes: #411502
+    - Drop dpatch. The patch has been applied by upstream.
+    - We do not need to fix the rights of modperl.pm anymore, fixed in svn.
+  * Bumped Standards-Version to 3.8.0 (no changes needed).
+  * Correct typo in the Files field for Csocket.cpp and Csocket.h.
+    Thanks psychon for reporting that.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sat, 14 Jun 2008 18:27:01 +0100
+
+
+znc (0.045-3+etch3) oldstable-security; urgency=high
+
+  * Fixes an high-impact directory traversal bug, where unprivileged users can
+    save about DCC SEND files on the server with the rights of the znc process.
+    The attacker could also use the exploit to get a shell on the server.
+    Closes: #537977
+  * Change my email address, the old one is not reachable anymore.
+
+ -- Patrick Matthäi <pmatthaei@debian.org>  Sat, 01 Aug 2009 20:23:03 +0200
+
+znc (0.045-3+etch2) oldstable-security; urgency=low
+
+  * Backported upstream patch from the 0.066 release which fixes the handling
+    of newlines in CHTTPSock::GetParam() and strip them out. This patch fixes
+    an important privilege escalation in the webadmin module.
+    Closes: #516950
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Wed,  4 Mar 2009 12:07:13 +0200
+
+znc (0.045-3+etch1) stable; urgency=low
+
+  * Set myself as new maintainer.
+  * Applied two patches from upstream which fixes two crash bugs:
+    - Crash bug when doing /nick while not connected to IRC (NULL pointer).
+    - Crash bug when using *status while not connected to IRC (NULL pointer).
+
+ -- Patrick Matthäii <patrick.matthaei@web.de>  Fri, 13 Jun 2008 21:49:31 +0100
+
+znc (0.056-1) unstable; urgency=low
+
+  * New upstream release.
+  * New maintainer.
+    Closes: #483248
+  * Build znc with IPv6 support.
+  * Applied upstream patch from svn r1068 to de-bashify znc-buildmod.
+  * Dropped autotools-dev build depend.
+  * Removed Vcs-Git control field.
+  * Added DM-Upload-Allowed control field.
+  * Some debian/rules tweaks like cross compile support.
+  * Install modperl.pm without executable rights.
+
+ -- Patrick Matthäi <patrick.matthaei@web.de>  Sat, 31 May 2008 21:04:31 +0100
+
+znc (0.054-4) unstable; urgency=low
+
+  * Orphaned the package.
+
+ -- Joey Hess <joeyh@debian.org>  Tue, 27 May 2008 18:34:09 -0400
+
+znc (0.054-3) unstable; urgency=low
+
+  * Convert znc-buildmod to a bash script so as to not need to worry about
+    bashisms (actually, nonportable echo -e's) in this script. Closes: #480621
+
+ -- Joey Hess <joeyh@debian.org>  Wed, 14 May 2008 19:46:43 -0400
+
+znc (0.054-2) unstable; urgency=low
+
+  * Remove some patches for things fixed upstream. Thanks to Robert Förster
+    for pointing them out.
+
+ -- Joey Hess <joeyh@debian.org>  Sat, 19 Apr 2008 17:00:13 -0400
+
+znc (0.054-1) unstable; urgency=low
+
+  * New upstream release:
+    * Forward /names replies for unknown channels.
+    * Global modules can no longer hook into every config line, but only 
+      those prefixed with 'GM:'.
+    * Don't forward topic changes for detached channels.
+    * Remove ~/.znc/configs/backups and instead only keep one backup under
+      znc.conf-backup.
+    * Update /msg *status help.
+    * Add --datadir to znc-config.
+    * Update bundled Csocket to the latest version. This fixes some bugs
+      (e.g. not closing SSL connections properly).
+    * Use $HOME if possible to get the user's home (No need to read
+      /etc/passwd anymore).
+    * Use -Wshadow and fix all those warnings.
+    * Add /msg *status ListAvailMods. Thanks to SilverLeo.
+    * Add OnRehashDone() module call.
+    * Add rehashing (SIGHUP and /msg *status rehash).
+    * Also write a pid file if we are compiled with --enable-debug.
+      Thanks to SilverLeo.
+    * Add ClearVHost and 'fix' SetVHost. Thanks to SilverLeo.
+    * Increase the connect timeout for IRC connections to 2 mins.
+    * Add a user's vhost to the list on the user page in webadmin.
+    * Add --no-color switch and only use colors if we are on a terminal.
+    * Add DenySetVHost config option. Thanks to Veit Wahlich aka cru.
+    * Change --makeconf's default for KeepNick and KeepBuffer to false.
+    * Add simple_away module. This sets you away some time after you
+      disconnect from ZNC.
+    * Don't write unneeded settings to the <Chan> section. Thanks to SilverLeo.
+    * Remove OnFinishedConfig() module call. Use OnBoot() instead.
+    * Fix some GCC 4.3 warnings. Thanks to darix again.
+    * Move the static data (webadmin's skins) to /usr/share/znc per default.
+      Thanks to Marcus Rueckert aka darix.
+    * New znc-buildmod which works on shells other than bash.
+    * Add ClearAllChannelBuffers to *status.
+    * Handle CTCPs to *status.
+    * autoattach now saves and reloads its settings.
+    * Let webadmin use the user's defaults for new chans. Thanks to SilverLeo. 
+
+ -- Joey Hess <joeyh@debian.org>  Tue, 01 Apr 2008 13:13:12 -0400
+
+znc (0.052-2) unstable; urgency=low
+
+  * Add a Homepage field.
+  * Remove antiidle module, gone upsteam (bad merge before).
+  * Copyright file updates.
+
+ -- Joey Hess <joeyh@debian.org>  Fri, 18 Jan 2008 13:34:27 -0500
+
+znc (0.052-1) unstable; urgency=low
+
+  * New upstream release:
+    * Added saslauth module.
+    * Add del command to autoattach.
+    * Make awaynick save its settings and restore them when it is loaded again.
+    * Added disconnect and connect commands to *status.
+    * CTCPReply = VERSION now ignores ctcp version requests (as long as no
+      client is attached). This works for every CTCP request.
+    * Add -W to our default CXXFLAGS.
+    * Remove save command from perform, it wasn't needed.
+    * Add list command to stickychan.
+    * --with-module-prefix=x now really uses x and not x/znc (Inspired by
+      CNU :) ).
+    * Use a dynamic select timeout (sleep until next cron runs). This should
+      save some CPU time.
+    * Fix NAMESX / UHNAMES, round two (multi-client breakage).
+    * Module API change (without any breakage): OnLoad gets sMessage instead
+      of sErrorMsg.
+    * Fix a mem-leak.
+    * Disable auto-rejoin on kick and add module kickrejoin.
+    * Respect $CXXFLAGS env var in configure.
+    * Removed some executable bits on graphiX' images.
+    * Added README file and removed docs/.
+    * Removed the antiidle module.
+    * Fixes for GCC 4.3 (Debian bug #417793).
+    * Some dead code / code duplications removed.
+    * Rewrote Makefile.ins and don't strip binaries anymore by default.
+
+ -- Joey Hess <joeyh@debian.org>  Tue, 04 Dec 2007 13:12:15 -0500
+
+znc (0.050-1) unstable; urgency=low
+
+  * New upstream release:
+    * fixed UHNAMES bug (ident was messed up, wrong joins were sent)
+    * fixed /lusers bug (line was cached more than once)
+    * added disabled chans to the core
+    * send out a notice asking for the server password if client
+      doesn't send one
+    * added ConnectDelay config option
+    * added timestamps on the backlog
+    * added some module calls
+    * added basic traffic stats
+    * added usermodes support
+    * API breakage (CModule::OnLoad got an extra param)
+    * added fixed channels to the partyline module
+    * fixed partyline bugs introduced by last item
+    * fixed a NULL pointer dereference if /nick command was received from a
+      client while not connected to IRC
+    * added a JoinTries per-user config option which specifies how often we
+      try to rejoin a channel (default: 0 -> unlimited)
+    * make configure fail if it can't find openssl (or perl, ...)
+    * new modules: antiidle, nickserv 
+  * znc-buildmod contains a bashish, run under bash.
+
+ -- Joey Hess <joeyh@debian.org>  Mon, 27 Aug 2007 13:44:40 -0400
+
+znc (0.047-2) unstable; urgency=low
+
+  * Fix nostrip build. Closes: #438368
+
+ -- Joey Hess <joeyh@debian.org>  Thu, 16 Aug 2007 13:55:47 -0400
+
+znc (0.047-1) unstable; urgency=low
+
+  * New upstream release.
+  * Patch from tbm fixing FTBFS with gcc 4.3. Closes: #417793
+  * Add a basic README.Debian. Closes: #411495
+
+ -- Joey Hess <joeyh@debian.org>  Mon, 14 May 2007 13:44:45 -0400
+
+znc (0.045-3) unstable; urgency=high
+
+  * Apply patch from CVS to fix a security hole that allowed a logged-in
+    user to get/put any accessible file on the host running znc, rather than
+    only files they should be allowed to access. Closes: #403141
+
+ -- Joey Hess <joeyh@debian.org>  Thu, 14 Dec 2006 17:08:30 -0500
+
+znc (0.045-2) unstable; urgency=low
+
+  * Fix FTBFS with gcc 4.2 which removes the deprecated >? operator. 
+    Closes: #393993
+
+ -- Joey Hess <joeyh@debian.org>  Fri, 20 Oct 2006 16:23:17 -0400
+
+znc (0.045-1) unstable; urgency=low
+
+  * First release.
+  * Moved the modules from /usr/share/znc to /usr/lib/znc.
+  * Use recent config.sub and config.guess from autotools-dev.
+  * Added LICENSE and LICENSE.OpenSSL files from current upstream CVS.
+
+ -- Joey Hess <joeyh@debian.org>  Thu, 14 Sep 2006 13:04:28 -0400

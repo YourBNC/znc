@@ -1,0 +1,4 @@
+usr/lib/znc/modpython.so usr/lib/znc/
+usr/lib/znc/modpython/znc.py usr/lib/znc/modpython/
+usr/lib/znc/modpython/_znc_core.so usr/lib/znc/modpython/
+usr/lib/znc/modpython/znc_core.py usr/lib/znc/modpython/

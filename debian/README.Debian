@@ -1,0 +1,10 @@
+To get started using znc, run "znc --makeconf" to interactively create a
+configuration file (~/.znc/configs/znc.conf).
+
+Once you have znc set up, you may want to start the daemon on boot, with
+this in a user's crontab:
+@reboot znc
+
+To connect to znc from your irc client, you will use a command like this:
+/server <znc_server_ip> <port> <username>:<pass>
+Note that the username and password are sent as the irc server password.

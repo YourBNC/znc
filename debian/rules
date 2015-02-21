@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+export DEB_BUILD_OPTIONS+=nocheck
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+# Add the Debian revision to the CXXFLAGS and build it with debugging symbols.
+CXXFLAGS := -g -DVERSION_EXTRA=\"+deb$(shell head -1 debian/changelog | sed 's/.*(//;s/).*//;s/.*-//')\"
+
+DEB_CONFIGURE_EXTRA_FLAGS := \
+	--prefix=/usr \
+	--libdir=/usr/lib \
+	--enable-tcl \
+	--enable-cyrus \
+	--enable-perl \
+	--enable-python
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(DEB_CONFIGURE_EXTRA_FLAGS)
+
+override_dh_auto_build:
+	$(MAKE) VERBOSE=1
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+
+override_dh_python3:
+	dh_python3 \
+		-p znc-python \
+		--exclude=znc.py \
+		--exclude=znc_core.py
+
+override_dh_install:
+	dh_install --list-missing
+
+override_dh_strip:
+	dh_strip --dbg-package=znc-dbg
