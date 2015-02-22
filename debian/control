@@ -10,7 +10,8 @@ Build-Depends: debhelper (>= 9),
  libsasl2-dev,
  swig3.0,
  python3-dev,
- automake
+ automake,
+ autoconf 
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Patrick Matthäi <pmatthaei@debian.org>
 Standards-Version: 3.9.6

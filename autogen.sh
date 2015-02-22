@@ -47,3 +47,5 @@ echo "(Yes, automake is supposed to fail, ignore that)"
 echo
 
 echo "You may now run ./configure."
+
+exit 0
