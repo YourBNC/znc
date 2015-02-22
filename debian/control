@@ -21,14 +21,14 @@ Package: yourbnc-znc
 Architecture: any
 Depends: ${shlibs:Depends},
  ${misc:Depends}
-Recommends: znc-tcl,
- znc-perl,
- znc-python
-Conflicts: znc-webadmin,
- znc-extra
-Breaks: znc-extra (<< ${binary:Version})
-Replaces: znc-webadmin,
- znc-extra
+Recommends: yourbnc-znc-tcl,
+ yourbnc-znc-perl,
+ yourbnc-znc-python
+Conflicts: yourbnc-znc-webadmin,
+ yourbnc-znc-extra
+Breaks: yourbnc-znc-extra (<< ${binary:Version})
+Replaces: yourbnc-znc-webadmin,
+ yourbnc-znc-extra
 Description: advanced modular IRC bouncer
  znc is an IRC proxy. It runs as a daemon and connects to IRC server,
  then allows you to connect from a workstation and work as the user that
@@ -46,9 +46,9 @@ Section: debug
 Architecture: any
 Priority: extra
 Depends: ${misc:Depends},
- znc (= ${binary:Version}) | znc-perl (= ${binary:Version}) |
- znc-python (= ${binary:Version})
-Breaks: znc-extra-dbg (<= 0.074)
+ znc (= ${binary:Version}) | yourbnc-znc-perl (= ${binary:Version}) |
+ yourbnc-znc-python (= ${binary:Version})
+Breaks: yourbnc-znc-extra-dbg (<= 0.074)
 Description: advanced modular IRC bouncer (debugging symbols)
  znc is an IRC proxy. It runs as a daemon and connects to IRC server,
  then allows you to connect from a workstation and work as the user that
