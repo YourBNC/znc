@@ -1,18 +1,17 @@
 <? INC Header.tmpl ?>
-
-<div class="textsection">
-
-	<p>Welcome to ZNC's web interface!</p>
-
-	<?IF LoggedIn ?>
+<div class="container">
+	<div class="row">
+		<div class="col-md-6 col-md-offset-3">
+		<?IF LoggedIn ?>
+			<hr>
+			<p>Welcome to YourBNC's web interface! &mdash; This web interface will allow you to manage your YourBNC account..</p>
+			<p>New to YourBNC? Trying to figure out how to connect to your YourBNC? Check out our website <a href="https://yourbnc.co.uk/" target="_blank">Website</a> or <a href="https://yourbnc.co.uk/contact.php" target"_blank">Contact Us</a></p>
 		<?IF !GlobalModLoop ?>
 			<?IF !UserModLoop ?>
-				<p>No Web-enabled modules have been loaded. Load modules from IRC ("<code>/msg *status help</code>" and
-					"<code>/msg *status loadmod &lt;module&gt;</code>"). Once you have loaded some Web-enabled modules, the menu will expand.</p>
+				<p>Oopss! No Web-enabled modules have been loaded. Please contact an admin for details.</p>
 			<? ENDIF ?>
 		<? ENDIF ?>
 	<? ENDIF ?>
-
-</div>
-
+	</div>
+</div>	
 <? INC Footer.tmpl ?>
