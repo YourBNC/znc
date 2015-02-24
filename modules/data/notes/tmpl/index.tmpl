@@ -1,49 +1,58 @@
 <? INC Header.tmpl ?>
 
-<form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>addnote">
-	<? INC _csrf_check.tmpl ?>
-	<div class="section">
-		<h3>Add A Note</h3>
-		<div class="sectionbg">
-			<div class="sectionbody">
-				<div class="subsection third">
-					<div class="inputlabel">Key:</div>
-					<input type="text" name="key" size="8" />
+<div class="container col-md-10 col-md-offset-1">
+	<div class="panel panel-default">
+		<div class="panel-heading">Notes &middot; Add A Note</div>
+			<div class="panel-body">
+				<form class="form-horizontal" method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>addnote">
+				<? INC _csrf_check.tmpl ?>
+				
+				<div class="form-group">
+					<label for="inputKey" class="col-sm-2 control-label">Key:</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputKey" name="key" size="8">
+						</div>
 				</div>
-				<div class="subsection full">
-					<div class="inputlabel">Note:</div>
-					<input type="text" name="note" size="40" />
+  
+  
+				<div class="form-group">
+					<label for="inputNote" class="col-sm-2 control-label">Note:</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputNote" name="note" size="40">
+						</div>
 				</div>
-				<div class="subsection submitline">
-					<input type="submit" name="add" value="Add Note" />
+
+				<? IF !NotesLoop ?>
+					<div class="alert alert-warning">You have no notes to display.</div>
+				<? ELSE ?>
+
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<td>Key</td>
+							<td>Note</td>
+							<td>Action</td>
+						</tr>
+					</thead>
+					<tbody>
+						<? LOOP NotesLoop ?>
+						<tr>
+							<td><? VAR Key ?></td>
+							<td><? VAR Note ?></td>
+							<td><a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>delnote?key=<? VAR Key ESC=URL,HTML ?>" class="btn btn-danger btn-xs">Delete</a></td>
+						</tr>
+						<? ENDLOOP ?>
+					</tbody>
+				</table>
+				<? ENDIF ?>
 				</div>
-			</div>
-		</div>
+				
+				<div class="panel-footer text-right">
+					<input class="btn btn-danger" type="reset" value="Reset">
+					<input class="btn btn-success" type="submit" name="add" value="Add Note"  />
+				</div>
+				</form>
 	</div>
-</form>
-
-<? IF !NotesLoop ?>
-<p>You have no notes to display.</p>
-<? ELSE ?>
-
-<table class="data">
-	<thead>
-		<tr>
-			<td style="width: 10px;"></td>
-			<td>Key</td>
-			<td>Note</td>
-		</tr>
-	</thead>
-	<tbody>
-		<? LOOP NotesLoop ?>
-		<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
-			<td><a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>delnote?key=<? VAR Key ESC=URL,HTML ?>"><img src="<? VAR URIPrefix TOP ?><? VAR ModFilesPath TOP ?>trash.gif" alt="[del]" /></a></td>
-			<td><? VAR Key ?></td>
-			<td><? VAR Note ?></td>
-		</tr>
-		<? ENDLOOP ?>
-	</tbody>
-</table>
-<? ENDIF ?>
-
+</div>
+	
 <? INC Footer.tmpl ?>

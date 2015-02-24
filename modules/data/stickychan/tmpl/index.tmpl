@@ -1,28 +1,40 @@
 <? INC Header.tmpl ?>
 
-<form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>">
-	<? INC _csrf_check.tmpl ?>
-	<table class="data">
-		<thead>
-			<tr>
-				<td>Name</td>
-				<td>Sticky</td>
-			</tr>
-		</thead>
-		<tbody>
-			<? LOOP ChannelLoop SORTASC=Name ?>
-			<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
-				<td><? VAR Name ?></td>
-				<td><input type="checkbox" name="stick_<? VAR Name ?>"<? IF Sticky ?> checked="checked"<? ENDIF ?> /></td>
-			</tr>
-			<? ENDLOOP ?>
-		</tbody>
-	</table>
-
-	<div class="submitline">
-		<input type="hidden" name="submitted" value="1" />
-		<input type="submit" value="Save" />
+<div class="container col-md-10 col-md-offset-1">
+	<div class="panel panel-default">
+		<div class="panel-heading">Stickychan</div>
+			<div class="panel-body">
+				<form class="form-horizontal" action="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>" method="post">
+				<? INC _csrf_check.tmpl ?>
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<td>Channel Name</td>
+							<td>Enable / Disable</td>
+						</tr>
+					</thead>
+					<tbody>
+						<? LOOP ChannelLoop SORTASC=Name ?>
+						<tr>
+							<td><? VAR Name ?></td>
+							<td>
+								<div class="switch">
+									<input type="checkbox" id="stick_<? VAR Name ?>" name="stick_<? VAR Name ?>" class="cmn-toggle cmn-toggle-round-flat"<? IF Sticky ?> checked="checked"<? ENDIF ?> />
+									<label for="stick_<? VAR Name ?>"></label>
+								</div>
+							</td>
+						</tr>
+					<? ENDLOOP ?>
+					</tbody>
+				</table>
+			</div>
+			<div class="panel-footer text-right">
+				<input class="btn btn-danger" type="reset" value="Reset">
+				<input type="hidden" name="submitted" value="1" />
+				<input class="btn btn-success" type="submit" value="Save" />
+			</div>
+				</form>
 	</div>
-</form>
+</div>
 
 <? INC Footer.tmpl ?>

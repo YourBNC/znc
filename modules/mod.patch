@@ -1,0 +1,894 @@
+diff -cr data/blockuser/tmpl/blockuser_WebadminUser.tmpl blockuser/tmpl/blockuser_WebadminUser.tmpl
+*** data/blockuser/tmpl/blockuser_WebadminUser.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- blockuser/tmpl/blockuser_WebadminUser.tmpl	2015-02-22 17:14:35.148123371 +0100
+***************
+*** 1,13 ****
+! <div class="sectionbg">
+! 	<div class="sectionbody">
+! 		<div class="subsection">
+! 			<input type="hidden" name="embed_blockuser_presented" value="1"/>
+! 			<input type="hidden" name="embed_blockuser_old" value="<? VAR Blocked ?>"/>
+! 			<div class="checkbox">
+! 				<input type="checkbox" name="embed_blockuser_block" id="opt_embed_blockuser_block" value="1"<? IF Blocked ?> checked="checked"<? ENDIF ?><? IF Self ?> disabled="disabled"<? ENDIF ?> />
+! 				<label for="opt_embed_blockuser_block">Account is blocked</label>
+! 			</div>
+! 		</div>
+! 		<div style="clear:both;"></div>
+! 	</div>
+  </div>
+--- 1,6 ----
+! <div class="switch">
+! 	<input type="checkbox" name="embed_blockuser_block" id="opt_embed_blockuser_block" value="1" class="cmn-toggle cmn-toggle-round-flat"<? IF Blocked ?> checked="checked"<? ENDIF ?><? IF Self ?> disabled="disabled"<? ENDIF ?> />
+! 	<label for="opt_embed_blockuser_block"></label>
+  </div>
++ 		
++   
+\ No newline at end of file
+diff -cr data/cert/tmpl/index.tmpl cert/tmpl/index.tmpl
+*** data/cert/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- cert/tmpl/index.tmpl	2015-02-22 17:14:35.148123371 +0100
+***************
+*** 1,27 ****
+  <? INC Header.tmpl ?>
+  
+! <? IF Cert ?>
+! <p>You already have a certificate set, use the form below to overwrite the current certificate. Alternatively click <a href="<? VAR URIPrefix TOP ?><? VAR ModPath ?>delete">here</a> to <a href="<? VAR URIPrefix TOP ?><? VAR ModPath ?>delete">delete</a> your certificate.</p>
+! <? ELSE ?>
+! <p>You do not have a cert.</p>
+! <? ENDIF ?>
+  
+! <form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>update">
+! 	<? INC _csrf_check.tmpl ?>
+! 	<div class="section">
+! 		<h3>Certificate</h3>
+! 		<div class="sectionbg">
+! 			<div class="sectionbody">
+! 				<div class="subsection full">
+! 					<div class="inputlabel">PEM File:</div>
+! 					<textarea name="cert" style="height: 300px;"></textarea>
+! 				</div>
+! 				<div class="subsection submitline">
+! 					<input type="submit" name="add" value="Update" />
+! 				</div>
+  			</div>
+! 		</div>
+  	</div>
+! </form>
+  
+! <? INC Footer.tmpl ?>
+--- 1,30 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Certificate</div>
+! 			<div class="panel-body">
+! 				<? IF Cert ?>
+! 					<div class="alert alert-success">You already have a certificate set, use the form below to overwrite the current certificate. Alternatively click <a href="<? VAR URIPrefix TOP ?><? VAR ModPath ?>delete">here</a> to <a href="<? VAR URIPrefix TOP ?><? VAR ModPath ?>delete">delete</a> your certificate.</div>
+! 				<? ELSE ?>
+! 					<div class="alert alert-danger">You do not have a cert.</div>
+! 				<? ENDIF ?>
+  
+! 				<form class="form-horizontal" method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>update">
+! 				<? INC _csrf_check.tmpl ?>
+! 					<div class="form-group">
+! 					<label for="inputPEM" class="col-sm-2 control-label">PEM File: </label>
+! 						<div class="col-sm-10">
+! 							<textarea class="form-control" rows="5" name="cert"></textarea>
+! 						</div>
+! 					</div>
+! 			</div>	
+! 			<div class="panel-footer text-right">
+! 				<input class="btn btn-danger" type="reset" value="Reset">
+! 				<input class="btn btn-success" type="submit" name="add" value="Update" />
+  			</div>
+! 				</form>	
+  	</div>
+! </div>
+  
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/certauth/tmpl/index.tmpl certauth/tmpl/index.tmpl
+*** data/certauth/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- certauth/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+***************
+*** 1,43 ****
+  <? INC Header.tmpl ?>
+  
+! <form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>add">
+! 	<? INC _csrf_check.tmpl ?>
+! 	<div class="section">
+! 		<h3>Add A Note</h3>
+! 		<div class="sectionbg">
+! 			<div class="sectionbody">
+! 				<div class="subsection full">
+! 					<div class="inputlabel">Key:</div>
+! 					<input type="text" name="key" size="40" />
+! 				</div>
+! 				<div class="subsection submitline">
+! 					<input type="submit" name="add" value="Add Key" />
+  				</div>
+  			</div>
+! 		</div>
+  	</div>
+! </form>
+! 
+! <? IF !KeyLoop ?>
+! <p>You have no keys.</p>
+! <? ELSE ?>
+! 
+! <table class="data">
+! 	<thead>
+! 		<tr>
+! 			<td></td>
+! 			<td>Key</td>
+! 		</tr>
+! 	</thead>
+! 	<tbody>
+! 		<? LOOP KeyLoop ?>
+! 		<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
+! 			<td>[<a href="<? VAR ModPath ?>delete?key=<? VAR Key ESC=URL,HTML ?>">del</a>]</td>
+! 			<td><? VAR Key ?></td>
+! 		</tr>
+! 		<? ENDLOOP ?>
+! 	</tbody>
+! </table>
+! <? ENDIF ?>
+! 
+! <? INC Footer.tmpl ?>
+--- 1,49 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Certauth &mdash; Add A Note</div>
+! 			<div class="panel-body">
+! 				<form class="form-horizontal" method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>add">
+! 				<? INC _csrf_check.tmpl ?>
+! 				<div class="form-group">
+! 					<label for="inputKey" class="col-sm-2 control-label">Key:</label>
+! 						<div class="col-sm-10">
+! 							<input type="text" class="form-control" id="inputKey" name="key" size="40">
+! 						</div>
+  				</div>
++ 
++ 				<? IF !KeyLoop ?>
++ 					<p class="text-center">You have no keys.</p>
++ 				<? ELSE ?>
++ 				
++ 				<br />
++ 				
++ 				<table class="table table-bordered table-hover">
++ 					<thead>
++ 						<tr>
++ 							<td>Action</td>
++ 							<td>Key</td>
++ 						</tr>
++ 					</thead>
++ 					<tbody>
++ 						<? LOOP KeyLoop ?>
++ 						<tr>
++ 							<td><a href="<? VAR ModPath ?>delete?key=<? VAR Key ESC=URL,HTML ?>" class="btn btn-danger btn-xs">Delete</a></td>
++ 							<td><? VAR Key ?></td>
++ 						</tr>
++ 						<? ENDLOOP ?>
++ 					</tbody>
++ 				</table>
++ 				<? ENDIF ?>
+  			</div>
+! 			
+! 			<div class="panel-footer text-right">
+! 				<input class="btn btn-danger" type="reset" value="Reset">
+! 				<input class="btn btn-success" type="submit" name="add" value="Add Key" />
+! 			</div>	
+! 			</form>
+  	</div>
+! </div>
+! 	
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/lastseen/tmpl/index.tmpl lastseen/tmpl/index.tmpl
+*** data/lastseen/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- lastseen/tmpl/index.tmpl	2015-02-22 17:14:35.158123381 +0100
+***************
+*** 1,29 ****
+  <? INC Header.tmpl ?>
+  
+! <div class="toptable">
+! 	<table class="data">
+! 		<thead>
+! 			<tr>
+! 				<td>User</td>
+! 				<td>Last Seen</td>
+! 				<td>Info</td>
+! 				<? IF WebAdminLoaded ?><td>Action</td><? ENDIF ?>
+! 			</tr>
+! 		</thead>
+! 		<tbody>
+! 			<? LOOP UserLoop ?>
+! 			<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
+! 				<td><? VAR Username ?></td>
+! 				<td><? VAR LastSeen DEFAULT="- unknown -" ?></td>
+! 				<td><? VAR Info ?></td>
+! 				<? IF WebAdminLoaded TOP ?><td><span class="nowrap">
+! 					[<a href="<? VAR URIPrefix TOP ?>/mods/global/webadmin/edituser?user=<?VAR Username ESC=URL?>">Edit</a>]
+! 					<? IF !IsSelf ?>[<a href="<? VAR URIPrefix TOP ?>/mods/global/webadmin/deluser?user=<?VAR Username ESC=URL?>">Delete</a>]<? ENDIF ?>
+! 					</span></td><? ENDIF ?>
+! 			</tr>
+! 			<? ENDLOOP ?>
+! 		</tbody>
+! 	</table>
+  </div>
+  
+! <? INC Footer.tmpl ?>
+--- 1,53 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Last Seen</div>
+! 			<div class="panel-body">
+! 				<div class="row">
+! 					<div class="col-md-4 col-md-offset-8"> 
+! 						<div class="input-group custom-search-form" style=".custom-search-form{margin-top:5px;}">
+! 							<input class="form-control" id="system-search" name="q" placeholder="Search..." required>
+! 								<span class="input-group-btn">
+! 									<button type="submit" class="btn btn-default">
+! 										<span class="fa fa-search"></span>
+! 									</button>
+! 								</span>
+! 						</div>
+! 					</div>
+! 				</div>
+! 				<br>		
+! 				<table class="table table-bordered table-hover table-striped table-list-search">
+! 					<thead>
+! 						<tr>
+! 							<td>User</td>
+! 							<td>Last Seen</td>
+! 							<td>Info</td>
+! 							<? IF WebAdminLoaded ?><td>Action</td><? ENDIF ?>
+! 						</tr>
+! 					</thead>
+! 					<tbody>
+! 						<? LOOP UserLoop ?>
+! 						<tr>
+! 							<td><? VAR Username ?></td>
+! 							<td><? VAR LastSeen DEFAULT="- unknown -" ?></td>
+! 							<td><? VAR Info ?> <? VAR Ident ?></td>
+! 							<? IF WebAdminLoaded TOP ?>
+! 							<td>
+! 							<a href="<? VAR URIPrefix TOP ?>/mods/global/webadmin/edituser?user=<?VAR Username ESC=URL?>" class="btn btn-primary btn-xs">Edit</a>
+! 								<? IF !IsSelf ?>
+! 									<a href="<? VAR URIPrefix TOP ?>/mods/global/webadmin/deluser?user=<?VAR Username ESC=URL?>" class="btn btn-danger btn-xs">Delete</a>
+! 								<? ENDIF ?>
+! 							</td>
+! 							<? ENDIF ?>
+! 						</tr>
+! 						<? ENDLOOP ?>
+! 					</tbody>
+! 				</table>
+! 			</div>
+! 	</div>
+  </div>
+  
+! <script type="text/javascript">$(document).ready(function(){var e=$(".list-group-item.active");$("#system-search").keyup(function(){var e=this;var t=$(".table-list-search tbody");var n=$(".table-list-search tbody tr");$(".search-sf").remove();n.each(function(r,i){var s=$(i).text().toLowerCase();var o=$(e).val().toLowerCase();if(o!=""){$(".search-query-sf").remove();t.prepend('<tr class="search-query-sf"><td colspan="6"><strong>Searching for: "'+$(e).val()+'"</strong></td></tr>')}else{$(".search-query-sf").remove()}if(s.indexOf(o)==-1){n.eq(r).hide()}else{$(".search-sf").remove();n.eq(r).show()}});if(n.children(":visible").length==0){t.append('<tr class="search-sf"><td class="text-muted" colspan="6">No entries found.</td></tr>')}})})</script>
+! 
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/lastseen/tmpl/lastseen_WebadminUser.tmpl lastseen/tmpl/lastseen_WebadminUser.tmpl
+*** data/lastseen/tmpl/lastseen_WebadminUser.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- lastseen/tmpl/lastseen_WebadminUser.tmpl	2015-02-22 17:14:35.158123381 +0100
+***************
+*** 1,8 ****
+! <div class="sectionbg">
+! 	<div class="sectionbody">
+! 		<div class="subsection">
+! 			<label id="last_login">Last login time:</label>
+! 			<span id="lastseen"><? VAR LastSeen DEFAULT="- unknown -" ?></span>
+  		</div>
+! 	</div>
+! </div>
+--- 1,5 ----
+! <div class="form-group">
+! 		<div class="col-sm-10">
+! 			<input type="text" class="form-control" id="inputLastseen" name="seen" value="<? VAR LastSeen DEFAULT="No Data..." ?>" disabled>
+  		</div>
+! </div>
+\ No newline at end of file
+diff -cr data/listsockets/tmpl/index.tmpl listsockets/tmpl/index.tmpl
+*** data/listsockets/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- listsockets/tmpl/index.tmpl	2015-02-22 17:14:35.158123381 +0100
+***************
+*** 1,32 ****
+  <? INC Header.tmpl ?>
+  
+! <table class="data">
+! 	<thead>
+! 		<tr>
+! 			<td>Name</td>
+! 			<td>Created</td>
+! 			<td>State</td>
+! 			<td>SSL</td>
+! 			<td>Local</td>
+! 			<td>Remote</td>
+! 			<td>Data In</td>
+! 			<td>Data Out</td>
+! 		</tr>
+! 	</thead>
+! 	<tbody>
+! 		<? LOOP SocketsLoop ?>
+! 		<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
+! 			<td><? VAR Name ?></td>
+! 			<td><? VAR Created ?></td>
+! 			<td><? VAR State ?></td>
+! 			<td><? VAR SSL ?></td>
+! 			<td><? VAR Local ?></td>
+! 			<td><? VAR Remote ?></td>
+! 			<td><? VAR In ?></td>
+! 			<td><? VAR Out ?></td>
+! 		</tr>
+! 		<? ENDLOOP ?>
+! 	</tbody>
+! </table>
+  
+! <? INC Footer.tmpl ?>
+--- 1,39 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Listsockets</div>
+! 			<div class="panel-body">
+!   				<table class="table table-bordered table-hover">
+! 					<thead>
+! 						<tr>
+! 							<td>Name</td>
+! 							<td>Created</td>
+! 							<td>State</td>
+! 							<td>SSL</td>
+! 							<td>Local</td>
+! 							<td>Remote</td>
+! 							<td>Data In</td>
+!  							<td>Data Out</td>
+! 						</tr>
+! 					</thead>
+! 					<tbody>
+! 						<? LOOP SocketsLoop ?>
+! 						<tr>
+! 							<td><? VAR Name ?></td>
+! 							<td><? VAR Created ?></td>
+! 							<td><? VAR State ?></td>
+! 							<td><? VAR SSL ?></td>
+! 							<td><? VAR Local ?></td>
+! 							<td><? VAR Remote ?></td>
+! 							<td><? VAR In ?></td>
+!  							<td><? VAR Out ?></td>
+! 						</tr>
+! 						<? ENDLOOP ?>
+! 					</tbody>
+! 				</table>
+! 			</div>
+! 	</div>
+! </div>
+  
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/notes/tmpl/index.tmpl notes/tmpl/index.tmpl
+*** data/notes/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- notes/tmpl/index.tmpl	2015-02-22 17:14:35.161456718 +0100
+***************
+*** 1,49 ****
+  <? INC Header.tmpl ?>
+  
+! <form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>addnote">
+! 	<? INC _csrf_check.tmpl ?>
+! 	<div class="section">
+! 		<h3>Add A Note</h3>
+! 		<div class="sectionbg">
+! 			<div class="sectionbody">
+! 				<div class="subsection third">
+! 					<div class="inputlabel">Key:</div>
+! 					<input type="text" name="key" size="8" />
+  				</div>
+! 				<div class="subsection full">
+! 					<div class="inputlabel">Note:</div>
+! 					<input type="text" name="note" size="40" />
+  				</div>
+- 				<div class="subsection submitline">
+- 					<input type="submit" name="add" value="Add Note" />
+- 				</div>
+- 			</div>
+- 		</div>
+- 	</div>
+- </form>
+- 
+- <? IF !NotesLoop ?>
+- <p>You have no notes to display.</p>
+- <? ELSE ?>
+  
+! <table class="data">
+! 	<thead>
+! 		<tr>
+! 			<td style="width: 10px;"></td>
+! 			<td>Key</td>
+! 			<td>Note</td>
+! 		</tr>
+! 	</thead>
+! 	<tbody>
+! 		<? LOOP NotesLoop ?>
+! 		<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
+! 			<td><a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>delnote?key=<? VAR Key ESC=URL,HTML ?>"><img src="<? VAR URIPrefix TOP ?><? VAR ModFilesPath TOP ?>trash.gif" alt="[del]" /></a></td>
+! 			<td><? VAR Key ?></td>
+! 			<td><? VAR Note ?></td>
+! 		</tr>
+! 		<? ENDLOOP ?>
+! 	</tbody>
+! </table>
+! <? ENDIF ?>
+  
+! <? INC Footer.tmpl ?>
+--- 1,58 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Notes &middot; Add A Note</div>
+! 			<div class="panel-body">
+! 				<form class="form-horizontal" method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>addnote">
+! 				<? INC _csrf_check.tmpl ?>
+! 				
+! 				<div class="form-group">
+! 					<label for="inputKey" class="col-sm-2 control-label">Key:</label>
+! 						<div class="col-sm-10">
+! 							<input type="text" class="form-control" id="inputKey" name="key" size="8">
+! 						</div>
+  				</div>
+!   
+!   
+! 				<div class="form-group">
+! 					<label for="inputNote" class="col-sm-2 control-label">Note:</label>
+! 						<div class="col-sm-10">
+! 							<input type="text" class="form-control" id="inputNote" name="note" size="40">
+! 						</div>
+  				</div>
+  
+! 				<? IF !NotesLoop ?>
+! 					<div class="alert alert-warning">You have no notes to display.</div>
+! 				<? ELSE ?>
+  
+! 				<table class="table table-bordered table-hover">
+! 					<thead>
+! 						<tr>
+! 							<td>Key</td>
+! 							<td>Note</td>
+! 							<td>Action</td>
+! 						</tr>
+! 					</thead>
+! 					<tbody>
+! 						<? LOOP NotesLoop ?>
+! 						<tr>
+! 							<td><? VAR Key ?></td>
+! 							<td><? VAR Note ?></td>
+! 							<td><a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>delnote?key=<? VAR Key ESC=URL,HTML ?>" class="btn btn-danger btn-xs">Delete</a></td>
+! 						</tr>
+! 						<? ENDLOOP ?>
+! 					</tbody>
+! 				</table>
+! 				<? ENDIF ?>
+! 				</div>
+! 				
+! 				<div class="panel-footer text-right">
+! 					<input class="btn btn-danger" type="reset" value="Reset">
+! 					<input class="btn btn-success" type="submit" name="add" value="Add Note"  />
+! 				</div>
+! 				</form>
+! 	</div>
+! </div>
+! 	
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/perform/tmpl/index.tmpl perform/tmpl/index.tmpl
+*** data/perform/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- perform/tmpl/index.tmpl	2015-02-22 17:14:35.161456718 +0100
+***************
+*** 1,24 ****
+  <? INC Header.tmpl ?>
+  
+! <form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>">
+! 	<? INC _csrf_check.tmpl ?>
+! 	<div class="section">
+! 		<h3>Perform</h3>
+! 		<div class="sectionbg">
+! 			<div class="sectionbody">
+! 				<div class="subsection full">
+! 					<div class="inputlabel">Perform commands:</div>
+! 					<textarea name="perform" cols="70" rows="5" class="monospace"><? LOOP PerformLoop ?><? VAR Perform ?>
+! <? ENDLOOP ?>
+! </textarea>
+! 					<br /><span class="info">Commands sent to the IRC server on connect, one per line.</span>
+! 				</div>
+! 				<div class="subsection submitline">
+! 					<input type="submit" name="save" value="Save" />
+  				</div>
+  			</div>
+! 		</div>
+  	</div>
+! </form>
+  
+! <? INC Footer.tmpl ?>
+--- 1,26 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Perform &middot; Add a Command</div>
+! 			<div class="panel-body">
+! 				<form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>">
+! 				<? INC _csrf_check.tmpl ?>
+! 				
+! 				<div class="form-group">
+! 					<label for="inputperformCommands" class="col-sm-2 control-label">Commands:</label>
+! 						<div class="col-sm-10">
+! 							<textarea type="text" class="form-control" id="inputperformCommands" name="perform" cols="70" rows="5" class="monospace"><? LOOP PerformLoop ?><? VAR Perform ?><? ENDLOOP ?></textarea>
+! 							<div class="alert alert-info help-block">Commands sent to the IRC server on connect, one per line.</div>
+! 						</div>
+  				</div>
+  			</div>
+! 			<div class="panel-footer text-right">
+! 				<input class="btn btn-danger" type="reset" value="Reset">
+! 				<input class="btn btn-success" type="submit" name="save" value="Save" />
+! 			</div>
+! 				</form>
+  	</div>
+! </div>
+  
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/q/tmpl/index.tmpl q/tmpl/index.tmpl
+*** data/q/tmpl/index.tmpl	2015-02-22 17:14:35.151456708 +0100
+--- q/tmpl/index.tmpl	2015-02-22 17:14:35.161456718 +0100
+***************
+*** 1,45 ****
+  <? INC Header.tmpl ?>
+  
+! <form action="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>" method="post">
+! 	<? INC _csrf_check.tmpl ?>
+! 	<div class="section">
+! 		<h3>Q</h3>
+! 		<div class="sectionbg">
+! 			<div class="sectionbody">
+! 				<div class="subsection">
+! 					<div class="inputlabel">Username:</div>
+! 					<input type="text" name="user" value="<? VAR Username ?>" class="half" maxlength="128"
+! 							   title="Please enter a username." />
+! 				</div>
+! 				<div class="subsection">
+! 					<div class="inputlabel">Password:</div>
+! 					<input type="password" name="password" class="half"
+! 						   title="Please enter a password." autocomplete="off" />
+! 				</div>
+! 				<div style="clear: both;"></div>
+! 			</div>
+! 		</div>
+! 	</div>
+  
+! 	<div class="section">
+! 		<h3>Options</h3>
+! 		<div class="sectionbg">
+! 			<div class="sectionbody lotsofcheckboxes">
+! 				<? LOOP OptionLoop ?>
+! 				<span class="checkboxandlabel" title="<? VAR Tooltip ?>">
+! 					<input type="checkbox" name="<? VAR Name ?>" id="opt_<? VAR Name ?>" value="1"<? IF Checked ?> checked="checked"<? ENDIF ?><? IF Disabled ?> disabled="disabled"<? ENDIF ?> />
+! 					<label for="opt_<? VAR Name ?>"><? VAR DisplayName ?></label>
+! 				</span>
+! 				<? ENDLOOP ?>
+! 				<div style="clear:both;"></div>
+  			</div>
+! 		</div>
+  	</div>
+! 
+! 	<div class="submitline">
+! 		<input type="hidden" name="submitted" value="1" />
+! 		<input type="submit" value="Save" />
+! 	</div>
+! </form>
+! 
+! <? INC Footer.tmpl ?>
+--- 1,60 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Q Network Module</div>
+! 			<div class="panel-body">
+! 				<form class="form-horizontal" action="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>" method="post">
+! 					<? INC _csrf_check.tmpl ?>
+! 						<div class="form-group">
+! 							<label for="inputStatusPrefix" class="col-sm-2 control-label">Username:</label>
+! 								<div class="col-sm-10">
+! 									<input type="text" class="form-control" name="user" value="<? VAR Username ?>" class="half" maxlength="128" placeholder="Please enter a username" />
+! 								</div>
+! 						</div>
+  
+! 						<div class="form-group">
+! 							<label for="inputStatusPrefix" class="col-sm-2 control-label">Password:</label>
+! 								<div class="col-sm-10">
+! 									<input type="text" class="form-control" type="password" name="password" class="half" placeholder="Please enter a password" autocomplete="off" />
+! 								</div>
+! 						</div>
+! 			
+! 						<div class="row">
+! 							<div class="col-md-6 col-md-offset-3">
+! 								<table class="table table-bordered table-hover table-striped">
+! 									<thead>
+! 										<tr>
+! 											<td>Status</td>
+! 											<td>Settings</td>
+! 										</tr>
+! 									</thead>
+! 									<tbody>	
+! 									<? LOOP OptionLoop ?>			
+! 										<tr>
+! 											<td>
+! 												<div class="switch" title="<? VAR Tooltip ?>">
+! 													<input type="checkbox" name="<? VAR Name ?>" id="opt_<? VAR Name ?>" value="1" class="cmn-toggle cmn-toggle-round-flat"<? IF Checked ?> checked="checked"<? ENDIF ?><? IF Disabled ?>disabled="disabled"<? ENDIF ?>"/>
+! 													<label for="opt_<? VAR Name ?>"></label>
+! 												</div>
+! 											</td>
+! 											<td>
+! 												<? VAR DisplayName ?>
+! 											</td>	
+! 										</tr>
+! 									<? ENDLOOP ?>
+! 									</tbody>
+! 								</table>
+! 							</div>				
+! 						</div>	
+  			</div>
+! 						<div class="panel-footer text-right">
+! 							<input type="hidden" name="submitted" value="1" />
+! 							<input class="btn btn-danger" type="reset" value="Reset">
+! 							<input class="btn btn-success" type="submit" value="Save" />
+! 						</div>
+! 				</form>				 
+  	</div>
+! </div>				
+!  
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/send_raw/tmpl/index.tmpl send_raw/tmpl/index.tmpl
+*** data/send_raw/tmpl/index.tmpl	2015-02-22 17:14:35.154790045 +0100
+--- send_raw/tmpl/index.tmpl	2015-02-22 17:14:35.161456718 +0100
+***************
+*** 1,53 ****
+  <? ADDROW JSLoop HREF=/modfiles/user/send_raw/select.js ?>
+  <? INC Header.tmpl ?>
+  
+! <form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>">
+! 	<? INC _csrf_check.tmpl ?>
+! 
+! 	<div class="section">
+! 		<h3>Send a raw IRC line</h3>
+! 
+! 		<div class="sectionbg">
+! 			<div class="sectionbody">
+! 				<div class="subsection third" id="userblock" style="display:none">
+! 					<div class="inputlabel">User:</div>
+! 					<input id="user" type="text" disabled="disabled" title="To change user, click to Network selector"/>
+  				</div>
+! 
+! 				<div class="subsection third">
+! 					<div class="inputlabel" id="networklabel">User/Network:</div>
+! 					<select name="network" id="selectnetwork" onchange="javascript:updateUser()">
+! 						<? LOOP UserLoop ?>
+! 							<optgroup label="<? VAR Username ?>">
+! 								<? LOOP NetworkLoop ?>
+! 									<option value="<? VAR Username ?>/<? VAR Network ?>"><? VAR Network ?></option>
+! 								<? ENDLOOP ?>
+  							</optgroup>
+! 						<? ENDLOOP ?>
+! 					</select>
+! 				</div>
+! 
+! 				<div class="subsection third">
+! 					<div class="inputlabel">Send to:</div>
+! 					<select name="send_to">
+! 						<option value="client"<? IF to_client ?> selected="yes"<? ENDIF ?>>Client</option>
+! 						<option value="server"<? IF to_server ?> selected="yes"<? ENDIF ?>>Server</option>
+! 					</select>
+! 				</div>
+! 
+! 				<div class="subsection full">
+! 					<div class="inputlabel">Line:</div>
+! 					<input type="text" name="line" value="<? VAR line ?>" />
+! 				</div>
+  
+! 				<div class="subsection submitline">
+! 					<input type="submit" value="Send"/>
+! 				</div>
+  			</div>
+! 		</div>
+  	</div>
+! </form>
+! 
+  <script type="text/javascript">init();</script>
+  
+! <? INC Footer.tmpl ?>
+--- 1,61 ----
+  <? ADDROW JSLoop HREF=/modfiles/user/send_raw/select.js ?>
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Send RAW &middot; Send a raw IRC line</div>
+! 			<div class="panel-body">
+! 				<form class="form-horizontal" method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath ?>">
+! 				<? INC _csrf_check.tmpl ?>
+! 				
+! 				<div class="form-group">
+! 					<label for="inputUser" class="col-sm-2 control-label">User:</label>
+! 						<div class="col-sm-10">
+! 							<input type="text" class="form-control" id="user" disabled="disabled" title="To change user, click to Network selector"/>
+! 						</div>
+  				</div>
+!   
+! 			<div class="form-group">
+! 				<label for="inputUserNetwork" class="col-sm-2 control-label">User/Network:</label>
+! 					<div class="col-sm-10">
+! 						<select class="form-control" name="network" id="selectnetwork" onchange="javascript:updateUser()">
+! 							<? LOOP UserLoop ?>
+! 								<optgroup label="<? VAR Username ?>">
+! 							<? LOOP NetworkLoop ?>
+! 								<option value="<? VAR Username ?>/<? VAR Network ?>"><? VAR Network ?></option>
+! 							<? ENDLOOP ?>
+  							</optgroup>
+! 							<? ENDLOOP ?>
+! 						</select>
+! 					</div>
+! 			</div>
+  
+! 			<div class="form-group">
+! 				<label for="inputSendto" class="col-sm-2 control-label">Send to:</label>
+! 					<div class="col-sm-10">
+! 						<select class="form-control" name="send_to">
+! 							<option value="client"<? IF to_client ?> selected="yes"<? ENDIF ?>>Client</option>
+! 							<option value="server"<? IF to_server ?> selected="yes"<? ENDIF ?>>Server</option>
+! 						</select>
+! 					</div>
+! 			</div>	
+! 
+! 			<div class="form-group">
+! 				<label for="inputLine" class="col-sm-2 control-label">Line:</label>
+! 					<div class="col-sm-10">
+! 						<input type="text" class="form-control" id="inputLine" name="line" value="<? VAR line ?>">
+! 					</div>
+  			</div>
+! 			</div>
+! 			
+! 			<div class="panel-footer text-right">
+! 				<input class="btn btn-danger" type="reset" value="Reset">
+! 				<input class="btn btn-success" type="submit" value="Send" />
+! 			</div>
+! 			</form>
+  	</div>
+! </div>
+! 	
+  <script type="text/javascript">init();</script>
+  
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/stickychan/tmpl/index.tmpl stickychan/tmpl/index.tmpl
+*** data/stickychan/tmpl/index.tmpl	2015-02-22 17:14:35.154790045 +0100
+--- stickychan/tmpl/index.tmpl	2015-02-22 17:14:35.164790056 +0100
+***************
+*** 1,28 ****
+  <? INC Header.tmpl ?>
+  
+! <form method="post" action="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>">
+! 	<? INC _csrf_check.tmpl ?>
+! 	<table class="data">
+! 		<thead>
+! 			<tr>
+! 				<td>Name</td>
+! 				<td>Sticky</td>
+! 			</tr>
+! 		</thead>
+! 		<tbody>
+! 			<? LOOP ChannelLoop SORTASC=Name ?>
+! 			<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
+! 				<td><? VAR Name ?></td>
+! 				<td><input type="checkbox" name="stick_<? VAR Name ?>"<? IF Sticky ?> checked="checked"<? ENDIF ?> /></td>
+! 			</tr>
+! 			<? ENDLOOP ?>
+! 		</tbody>
+! 	</table>
+! 
+! 	<div class="submitline">
+! 		<input type="hidden" name="submitted" value="1" />
+! 		<input type="submit" value="Save" />
+  	</div>
+! </form>
+  
+! <? INC Footer.tmpl ?>
+--- 1,40 ----
+  <? INC Header.tmpl ?>
+  
+! <div class="container col-md-10 col-md-offset-1">
+! 	<div class="panel panel-default">
+! 		<div class="panel-heading">Stickychan</div>
+! 			<div class="panel-body">
+! 				<form class="form-horizontal" action="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>" method="post">
+! 				<? INC _csrf_check.tmpl ?>
+! 				<table class="table table-bordered table-hover">
+! 					<thead>
+! 						<tr>
+! 							<td>Channel Name</td>
+! 							<td>Enable / Disable</td>
+! 						</tr>
+! 					</thead>
+! 					<tbody>
+! 						<? LOOP ChannelLoop SORTASC=Name ?>
+! 						<tr>
+! 							<td><? VAR Name ?></td>
+! 							<td>
+! 								<div class="switch">
+! 									<input type="checkbox" id="stick_<? VAR Name ?>" name="stick_<? VAR Name ?>" class="cmn-toggle cmn-toggle-round-flat"<? IF Sticky ?> checked="checked"<? ENDIF ?> />
+! 									<label for="stick_<? VAR Name ?>"></label>
+! 								</div>
+! 							</td>
+! 						</tr>
+! 					<? ENDLOOP ?>
+! 					</tbody>
+! 				</table>
+! 			</div>
+! 			<div class="panel-footer text-right">
+! 				<input class="btn btn-danger" type="reset" value="Reset">
+! 				<input type="hidden" name="submitted" value="1" />
+! 				<input class="btn btn-success" type="submit" value="Save" />
+! 			</div>
+! 				</form>
+  	</div>
+! </div>
+  
+! <? INC Footer.tmpl ?>
+\ No newline at end of file
+diff -cr data/stickychan/tmpl/stickychan_WebadminChan.tmpl stickychan/tmpl/stickychan_WebadminChan.tmpl
+*** data/stickychan/tmpl/stickychan_WebadminChan.tmpl	2015-02-22 17:14:35.154790045 +0100
+--- stickychan/tmpl/stickychan_WebadminChan.tmpl	2015-02-22 17:14:35.164790056 +0100
+***************
+*** 1,12 ****
+! 			<div class="sectionbg">
+! 				<div class="sectionbody">
+! 					<div class="subsection">
+! 						<input type="hidden" name="embed_stickychan_presented" value="1">
+! 						<div class="checkbox">
+! 							<input type="checkbox" name="embed_stickychan_sticky" id="opt_embed_stickychan_sticky" value="1"<? IF Sticky ?> checked="checked"<? ENDIF ?> />
+! 							<label for="opt_embed_stickychan_sticky">Channel is sticky</label>
+! 						</div>
+! 					</div>
+! 					<div style="clear:both;"></div>
+! 				</div>
+  			</div>
+--- 1,20 ----
+! <hr>
+! <div class="form-group">
+! 	<label for="inputenableDisable" class="col-sm-2 control-label">Channel is sticky:</label>
+! 		<div class="col-sm-10">
+! 			<div class="checkboxSwitch">
+! 				<input type="hidden" name="embed_stickychan_presented" value="1">
+! 				<input type="checkbox" id="embed_stickychan_sticky" name="embed_stickychan_sticky" id="opt_embed_stickychan_sticky" value="1"<? IF Sticky ?> checked="checked"<? ENDIF ?> />
+! 				<label for="embed_stickychan_sticky"></label>
+  			</div>
++ 		</div>
++ </div>
++   
++ 
++ 
++ 
++ 
++ 
++ 						
++ 					 
++ 					
+\ No newline at end of file
