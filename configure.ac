@@ -7,7 +7,7 @@ AC_DEFUN([AC_PROG_CC], [m4_errprint(__file__:__line__[: Something is trying to u
 dnl Needed for AC_PATH_PROGS_FEATURE_CHECK which was added in 2.62
 AC_PREREQ([2.62])
 dnl Keep the version number in sync with main.h!
-AC_INIT([znc], [1.6.0])
+AC_INIT([znc], [1.7.0])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/znc.cpp])
 AC_LANG([C++])
@@ -98,9 +98,6 @@ esac
 
 PKG_PROG_PKG_CONFIG()
 
-AC_ARG_WITH( [openssl],
-	AS_HELP_STRING([--with-openssl=DIR], [openssl installation prefix]),
-	[OPENSSL=$withval],)
 AC_ARG_ENABLE( [debug],
 	AS_HELP_STRING([--enable-debug], [enable debugging]),
 	[DEBUG="$enableval"],
@@ -293,13 +290,6 @@ fi
 
 SSL_TEXT="$SSL"
 if test "x$SSL" != "xno"; then
-	if test -n "$OPENSSL"; then
-		appendLib -L${OPENSSL}/lib
-		appendLib -L${OPENSSL}/lib64
-		appendCXX -I${OPENSSL}/include
-		PKG_CONFIG_PATH="$OPENSSL/lib/pkgconfig/:$OPENSSL/lib64/pkgconfig/:$PKG_CONFIG_PATH"
-	fi
-
 	old_SSL=$SSL
 	PKG_CHECK_MODULES([openssl], [openssl], [
 		appendLib "$openssl_LIBS"

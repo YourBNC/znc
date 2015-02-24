@@ -140,7 +140,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 	IRCSOCKMODULECALL(OnRaw(sLine), &bReturn);
 	if (bReturn) return;
 
-	if (sLine.Equals("PING ", false, 5)) {
+	if (sLine.StartsWith("PING ")) {
 		// Generate a reply and don't forward this to any user,
 		// we don't want any PING forwarded
 		PutIRCQuick("PONG " + sLine.substr(5));
@@ -148,7 +148,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 	} else if (sLine.Token(1).Equals("PONG")) {
 		// Block PONGs, we already responded to the pings
 		return;
-	} else if (sLine.Equals("ERROR ", false, 6)) {
+	} else if (sLine.StartsWith("ERROR ")) {
 		//ERROR :Closing Link: nick[24.24.24.24] (Excess Flood)
 		CString sError(sLine.substr(6));
 		sError.TrimPrefix();
@@ -685,6 +685,10 @@ void CIRCSock::ReadLine(const CString& sData) {
 				sMsg.RightChomp();
 
 				if (sTarget.Equals(GetNick())) {
+					if (m_pNetwork->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnCTCPReply(Nick, sMsg)) {
 						return;
 					}
@@ -694,10 +698,19 @@ void CIRCSock::ReadLine(const CString& sData) {
 				return;
 			} else {
 				if (sTarget.Equals(GetNick())) {
+					if (m_pNetwork->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnPrivNotice(Nick, sMsg)) {
 						return;
 					}
 				} else {
+					CChan* pChan = m_pNetwork->FindChan(sTarget);
+					if (pChan && pChan->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnChanNotice(Nick, sTarget, sMsg)) {
 						return;
 					}
@@ -742,10 +755,19 @@ void CIRCSock::ReadLine(const CString& sData) {
 				sMsg.RightChomp();
 
 				if (sTarget.Equals(GetNick())) {
+					if (m_pNetwork->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnPrivCTCP(Nick, sMsg)) {
 						return;
 					}
 				} else {
+					CChan* pChan = m_pNetwork->FindChan(sTarget);
+					if (pChan && pChan->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnChanCTCP(Nick, sTarget, sMsg)) {
 						return;
 					}
@@ -755,10 +777,19 @@ void CIRCSock::ReadLine(const CString& sData) {
 				return;
 			} else {
 				if (sTarget.Equals(GetNick())) {
+					if (m_pNetwork->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnPrivMsg(Nick, sMsg)) {
 						return;
 					}
 				} else {
+					CChan* pChan = m_pNetwork->FindChan(sTarget);
+					if (pChan && pChan->StripControls()) {
+						sMsg.StripControls();
+					}
+
 					if (OnChanMsg(Nick, sTarget, sMsg)) {
 						return;
 					}

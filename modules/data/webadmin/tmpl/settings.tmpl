@@ -201,6 +201,7 @@
 								<textarea class="form-control" id="inputMOTD" name="motd" rows="5" class="monospace"><? LOOP MOTDLoop ?><? VAR Line ?>
 <? ENDLOOP ?>
 </textarea>
+<<<<<<< HEAD
 								<div class="alert alert-info help-block">"Message of the Day", sent to all BNC users on connect.</div>
 							</div>
 						</div>
@@ -278,6 +279,86 @@
 						</tbody>
 					</table>
 				</div><!-- Global Module Settings -->
+=======
+					<br /><span class="info">"Message of the Day", sent to all ZNC users on connect.</span>
+				</div>
+
+				<div class="subsection twothird">
+					<div class="inputlabel">BindHosts:</div>
+					<textarea name="bindhosts" cols="70" rows="8"><? LOOP BindHostLoop ?><? VAR BindHost ?>
+<? ENDLOOP ?>
+</textarea>
+					<br /><span class="info">One host name or IP entry per line.</span>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<div class="section">
+		<h3>Global Modules</h3>
+		<div class="sectionbg">
+			<div class="sectionbody">
+				<table>
+					<thead>
+					<tr>
+						<td>Name</td>
+						<td>Arguments</td>
+						<td>Description</td>
+						<td>Loaded by networks</td>
+						<td>Loaded by users</td>
+					</tr>
+					</thead>
+					<tbody>
+					<? LOOP ModuleLoop ?>
+					<tr class="<? IF __EVEN__ ?>evenrow<? ELSE ?>oddrow<? ENDIF ?>">
+						<td class="mod_name">
+							<input type="checkbox" name="loadmod" id="lm_<? VAR Name ?>" value="<? VAR Name ?>"
+							<? IF Checked ?> checked="checked"<? ENDIF ?>
+							<? IF Disabled ?> disabled="disabled"<? ENDIF ?> />
+							<label for="lm_<? VAR Name ?>">
+							<? IF Wiki ?><a href="http://wiki.znc.in/<? VAR Wiki ?>" target="_blank" class="external"><? VAR Name ?></a>
+							<? ELSE ?> <? VAR Name ?> <? ENDIF ?></label>
+						</td>
+						<td class="mod_args">
+							<input type="text" name="modargs_<? VAR Name ?>" value="<? VAR Args ?>"
+							<? IF !HasArgs ?> disabled="disabled"<? ENDIF ?>
+							<? IF ArgsHelpText ?> title="<? VAR ArgsHelpText ?>"<? ENDIF ?> />
+						</td>
+						<td class="mod_descr"><? VAR Description ?></td>
+						<td align="center">
+							<? IF CanBeLoadedByNetwork ?>
+								<input type="checkbox" name="loaded_by_network" id="loaded_by_net_<? VAR Name ?>"
+								<? IF LoadedBySomeNetworks && LoadedByAllNetworks ?>
+									checked="checked"
+								<? ENDIF ?>
+								disabled="disabled"/>
+								<? IF LoadedBySomeNetworks && !LoadedByAllNetworks ?>
+									<script type="text/javascript">
+										document.getElementById("loaded_by_net_<? VAR Name ?>").indeterminate = true;
+									</script>
+								<? ENDIF ?>
+							<? ENDIF ?>
+						</td>
+						<td align="center">
+							<? IF CanBeLoadedByUser ?>
+								<input type="checkbox" name="loaded_by_user" id="loaded_by_user_<? VAR Name ?>"
+								<? IF LoadedBySomeUsers && LoadedByAllUsers ?>
+									checked="checked"
+								<? ENDIF ?>
+								disabled="disabled"/>
+								<? IF LoadedBySomeUsers && !LoadedByAllUsers ?>
+									<script type="text/javascript">
+										document.getElementById("loaded_by_user_<? VAR Name ?>").indeterminate = true;
+									</script>
+								<? ENDIF ?>
+							<? ENDIF ?>
+						</td>
+					</tr>
+					<? ENDLOOP ?>
+					</tbody>
+				</table>
+>>>>>>> upstream/master
 			</div>
         </div>
            

@@ -576,14 +576,13 @@ bool CModule::HandleCommand(const CString& sLine) {
 
 void CModule::HandleHelpCommand(const CString& sLine) {
 	CString sFilter = sLine.Token(1).AsLower();
-	CString::size_type  iFilterLength = sFilter.size();
 	CTable Table;
 	map<CString, CModCommand>::const_iterator it;
 
 	CModCommand::InitHelp(Table);
 	for (it = m_mCommands.begin(); it != m_mCommands.end(); ++it) {
 		CString sCmd = it->second.GetCommand().AsLower();
-		if (sFilter.empty() || (sCmd.Equals(sFilter, true, iFilterLength)) || sCmd.WildCmp(sFilter)) {
+		if (sFilter.empty() || (sCmd.StartsWith(sFilter, CString::CaseSensitive)) || sCmd.WildCmp(sFilter)) {
 			it->second.AddHelp(Table);
 		}
 	}
@@ -694,6 +693,7 @@ CModule::EModRet CModule::OnUserJoin(CString& sChannel, CString& sKey) { return 
 CModule::EModRet CModule::OnUserPart(CString& sChannel, CString& sMessage) { return CONTINUE; }
 CModule::EModRet CModule::OnUserTopic(CString& sChannel, CString& sTopic) { return CONTINUE; }
 CModule::EModRet CModule::OnUserTopicRequest(CString& sChannel) { return CONTINUE; }
+CModule::EModRet CModule::OnUserQuit(CString& sMessage) { return CONTINUE; }
 
 CModule::EModRet CModule::OnCTCPReply(CNick& Nick, CString& sMessage) { return CONTINUE; }
 CModule::EModRet CModule::OnPrivCTCP(CNick& Nick, CString& sMessage) { return CONTINUE; }
@@ -855,6 +855,7 @@ bool CModules::OnUserJoin(CString& sChannel, CString& sKey) { MODHALTCHK(OnUserJ
 bool CModules::OnUserPart(CString& sChannel, CString& sMessage) { MODHALTCHK(OnUserPart(sChannel, sMessage)); }
 bool CModules::OnUserTopic(CString& sChannel, CString& sTopic) { MODHALTCHK(OnUserTopic(sChannel, sTopic)); }
 bool CModules::OnUserTopicRequest(CString& sChannel) { MODHALTCHK(OnUserTopicRequest(sChannel)); }
+bool CModules::OnUserQuit(CString& sMessage) { MODHALTCHK(OnUserQuit(sMessage)); }
 
 bool CModules::OnQuit(const CNick& Nick, const CString& sMessage, const vector<CChan*>& vChans) { MODUNLOADCHK(OnQuit(Nick, sMessage, vChans)); return false; }
 bool CModules::OnNick(const CNick& Nick, const CString& sNewNick, const vector<CChan*>& vChans) { MODUNLOADCHK(OnNick(Nick, sNewNick, vChans)); return false; }

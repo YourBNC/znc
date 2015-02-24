@@ -71,11 +71,9 @@ class CAdminMod : public CModule {
 		static const char* doublenum = "Double";
 
 		const CString sCmdFilter = sLine.Token(1, false);
-		const CString::size_type iCmdLength = sCmdFilter.size();
-
 		const CString sVarFilter = sLine.Token(2, true).AsLower();
 
-		if (sCmdFilter.empty() || sCmdFilter.Equals("Set", false, iCmdLength) || sCmdFilter.Equals("Get", false, iCmdLength)) {
+		if (sCmdFilter.empty() || sCmdFilter.StartsWith("Set") || sCmdFilter.StartsWith("Get")) {
 			static const char* vars[][2] = {
 				{"Nick",                str},
 				{"Altnick",             str},
@@ -109,7 +107,7 @@ class CAdminMod : public CModule {
 			PrintVarsHelp(sVarFilter, vars, ARRAY_SIZE(vars), "The following variables are available when using the Set/Get commands:");
 		}
 
-		if (sCmdFilter.empty() || sCmdFilter.Equals("SetNetwork", false, iCmdLength) || sCmdFilter.Equals("GetNetwork", false, iCmdLength)) {
+		if (sCmdFilter.empty() || sCmdFilter.StartsWith("SetNetwork") || sCmdFilter.StartsWith("GetNetwork")) {
 			static const char* nvars[][2] = {
 				{"Nick",                str},
 				{"Altnick",             str},
@@ -124,18 +122,20 @@ class CAdminMod : public CModule {
 #endif
 				{"QuitMsg",             str},
 				{"SSLVerify",           boolean},
+				{"StripControls",       boolean},
 			};
 			PrintVarsHelp(sVarFilter, nvars, ARRAY_SIZE(nvars), "The following variables are available when using the SetNetwork/GetNetwork commands:");
 		}
 
-		if (sCmdFilter.empty() || sCmdFilter.Equals("SetChan", false, iCmdLength) || sCmdFilter.Equals("GetChan", false, iCmdLength)) {
+		if (sCmdFilter.empty() || sCmdFilter.StartsWith("SetChan") || sCmdFilter.StartsWith("GetChan")) {
 			static const char* cvars[][2] = {
 				{"DefModes",            str},
 				{"Key",                 str},
 				{"Buffer",              integer},
 				{"InConfig",            boolean},
 				{"AutoClearChanBuffer", boolean},
-				{"Detached",            boolean}
+				{"Detached",            boolean},
+				{"StripControls",       boolean},
 			};
 			PrintVarsHelp(sVarFilter, cvars, ARRAY_SIZE(cvars), "The following variables are available when using the SetChan/GetChan commands:");
 		}
@@ -495,6 +495,8 @@ class CAdminMod : public CModule {
 			PutModule("QuitMsg = " + pNetwork->GetQuitMsg());
 		} else if (sVar.Equals("sslverify")) {
 			PutModule("SSLVerify = " + CString(pNetwork->GetIRCSSLVerifyEnabled()));
+		} else if (sVar.Equals("stripcontrols")) {
+			PutModule("StripControls = " + CString(pNetwork->StripControls()));
 		} else {
 			PutModule("Error: Unknown variable");
 		}
@@ -598,6 +600,10 @@ class CAdminMod : public CModule {
 		} else if (sVar.Equals("sslverify")) {
 			pNetwork->SetIRCSSLVerifyEnabled(sValue.ToBool());
 			PutModule("SSLVerify = " + CString(pNetwork->GetIRCSSLVerifyEnabled()));
+		} else if (sVar == "stripcontrols") {
+			bool b = sValue.ToBool();
+			pNetwork->SetStripControls(b);
+			PutModule("StripControls = " + CString(b));
 		} else {
 			PutModule("Error: Unknown variable");
 		}
@@ -720,6 +726,12 @@ class CAdminMod : public CModule {
 				PutModule(pChan->GetName() + ": AutoClearChanBuffer = " + sValue);
 			} else if (sVar == "detached") {
 				PutModule(pChan->GetName() + ": Detached = " + CString(pChan->IsDetached()));
+			} else if (sVar == "stripcontrols") {
+				CString sValue(pChan->StripControls());
+				if (!pChan->HasStripControlsSet()) {
+					sValue += " (default)";
+				}
+				PutModule(pChan->GetName() + ": StripControls = " + sValue);
 			} else if (sVar == "key") {
 				PutModule(pChan->GetName() + ": Key = " + pChan->GetKey());
 			} else {
@@ -792,6 +804,10 @@ class CAdminMod : public CModule {
 						pChan->AttachUser();
 				}
 				PutModule(pChan->GetName() + ": Detached = " + CString(b));
+			} else if (sVar == "stripcontrols") {
+				bool b = sValue.ToBool();
+				pChan->SetStripControls(b);
+				PutModule(pChan->GetName() + ": StripControls = " + CString(b));
 			} else if (sVar == "key") {
 				pChan->SetKey(sValue);
 				PutModule(pChan->GetName() + ": Key = " + sValue);

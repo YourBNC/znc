@@ -224,6 +224,7 @@
 								<? IF !HasArgs ?> disabled="disabled"<? ENDIF ?>
 								<? IF ArgsHelpText ?> data-toggle="tooltip" data-placement="top" data-original-title="<? VAR ArgsHelpText ?>"<? ENDIF ?> />
 								<? ENDIF ?>
+<<<<<<< HEAD
 							</td>
 							<td><? VAR Description ?></td>
 							<td>
@@ -232,6 +233,16 @@
 										<input type="checkbox" name="loaded_globally" id="loaded_globally_<? VAR Name ?>" value="<? VAR Name ?>"<? IF LoadedGloabally?> checked="checked"  <? ENDIF ?> class="sr-only" disabled="disabled" /> <? ENDIF ?>
 										<label for="loaded_globally_<? VAR Name ?>"></label>
 									</div>
+=======
+								disabled="disabled"/>
+							<? ENDIF ?>	
+						</td>
+						<td align="center">
+							<? IF CanBeLoadedByNetwork ?>
+								<input type="checkbox" name="loaded_by_network" id="loaded_by_net_<? VAR Name ?>"
+								<? IF LoadedBySomeNetworks && LoadedByAllNetworks ?>
+									checked="checked"
+>>>>>>> upstream/master
 								<? ENDIF ?>
 							</td>
 							<td>

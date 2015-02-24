@@ -128,6 +128,7 @@ CIRCNetwork::CIRCNetwork(CUser *pUser, const CString& sName) {
 	m_uJoinDelay = 0;
 
 	SetIRCSSLVerifyEnabled(false);
+	SetStripControls(false);
 
 	m_RawBuffer.SetLineCount(100, true);   // This should be more than enough raws, especially since we are buffering the MOTD separately
 	m_MotdBuffer.SetLineCount(200, true);  // This should be more than enough motd lines
@@ -181,6 +182,7 @@ void CIRCNetwork::Clone(const CIRCNetwork& Network, bool bCloneName) {
 	SetEncoding(Network.GetEncoding());
 	SetQuitMsg(Network.GetQuitMsg());
 	SetIRCSSLVerifyEnabled(Network.GetIRCSSLVerifyEnabled());
+	SetStripControls(Network.StripControls());
 	m_ssTrustedFingerprints = Network.m_ssTrustedFingerprints;
 
 	// Servers
@@ -358,6 +360,7 @@ bool CIRCNetwork::ParseConfig(CConfig *pConfig, CString& sError, bool bUpgrade) 
 		TOption<bool> BoolOptions[] = {
 			{ "ircconnectenabled", &CIRCNetwork::SetIRCConnectEnabled },
 			{ "sslverify", &CIRCNetwork::SetIRCSSLVerifyEnabled },
+			{ "stripcontrols", &CIRCNetwork::SetStripControls },
 		};
 		size_t numBoolOptions = sizeof(BoolOptions) / sizeof(BoolOptions[0]);
 		TOption<double> DoubleOptions[] = {
@@ -517,6 +520,7 @@ CConfig CIRCNetwork::ToConfig() const {
 	config.AddKeyValuePair("FloodBurst", CString(GetFloodBurst()));
 	config.AddKeyValuePair("JoinDelay", CString(GetJoinDelay()));
 	config.AddKeyValuePair("Encoding", m_sEncoding);
+	config.AddKeyValuePair("StripControls", CString(StripControls()));
 
 	if (!m_sQuitMsg.empty()) {
 		config.AddKeyValuePair("QuitMsg", m_sQuitMsg);
@@ -794,8 +798,9 @@ CChan* CIRCNetwork::FindChan(CString sName) const {
 std::vector<CChan*> CIRCNetwork::FindChans(const CString& sWild) const {
 	std::vector<CChan*> vChans;
 	vChans.reserve(m_vChans.size());
+	const CString sLower = sWild.AsLower();
 	for (std::vector<CChan*>::const_iterator it = m_vChans.begin(); it != m_vChans.end(); ++it) {
-		if ((*it)->GetName().WildCmp(sWild))
+		if ((*it)->GetName().AsLower().WildCmp(sLower))
 			vChans.push_back(*it);
 	}
 	return vChans;
@@ -953,8 +958,9 @@ CQuery* CIRCNetwork::FindQuery(const CString& sName) const {
 std::vector<CQuery*> CIRCNetwork::FindQueries(const CString& sWild) const {
 	std::vector<CQuery*> vQueries;
 	vQueries.reserve(m_vQueries.size());
+	const CString sLower = sWild.AsLower();
 	for (std::vector<CQuery*>::const_iterator it = m_vQueries.begin(); it != m_vQueries.end(); ++it) {
-		if ((*it)->GetName().WildCmp(sWild))
+		if ((*it)->GetName().AsLower().WildCmp(sLower))
 			vQueries.push_back(*it);
 	}
 	return vQueries;
@@ -1284,6 +1290,14 @@ void CIRCNetwork::CheckIRCConnect() {
 	// Do we want to connect?
 	if (GetIRCConnectEnabled() && GetIRCSock() == NULL)
 		CZNC::Get().AddNetworkToQueue(this, m_pUser->IsAdmin());
+}
+
+void CIRCNetwork::SetStripControls(bool b) {
+	for (CChan* pChan : GetChans()) {
+		pChan->InheritStripControls(b);
+	}
+
+	m_bStripControls = b;
 }
 
 bool CIRCNetwork::PutIRC(const CString& sLine) {
