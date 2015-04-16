@@ -735,6 +735,7 @@ void CClient::UserCommand(CString& sLine) {
 
 		if (!m_pUser->IsAdmin()) {
 			PutStatus("Error: You are not allowed to remove servers.");
+			return;
 		}
 
 		CString sServer = sLine.Token(1);
