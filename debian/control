@@ -20,10 +20,12 @@ Homepage: http://znc.sourceforge.net/
 Package: yourbnc-znc
 Architecture: any
 Depends: ${shlibs:Depends},
- ${misc:Depends}
+ ${misc:Depends},
+ ca-certificates
 Recommends: yourbnc-znc-tcl,
  yourbnc-znc-perl,
- yourbnc-znc-python
+ yourbnc-znc-python,
+ yourbnc-znc-config
 Conflicts: yourbnc-znc-webadmin,
  yourbnc-znc-extra
 Breaks: yourbnc-znc-extra (<< ${binary:Version})
