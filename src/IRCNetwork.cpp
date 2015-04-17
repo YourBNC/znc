@@ -147,6 +147,7 @@ CIRCNetwork::CIRCNetwork(CUser *pUser, const CString& sName)
 	SetUser(pUser);
 
 	SetStripControls(false);
+	SetIRCSSLVerifyEnabled(false);
 
 	m_RawBuffer.SetLineCount(100, true);   // This should be more than enough raws, especially since we are buffering the MOTD separately
 	m_MotdBuffer.SetLineCount(200, true);  // This should be more than enough motd lines

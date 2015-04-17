@@ -120,6 +120,8 @@ public:
 	void SetDefaultModes(const CString& s) { m_sDefaultModes = s; }
 	void SetAutoClearChanBuffer(bool b);
 	void InheritAutoClearChanBuffer(bool b);
+	void SetStripControls(bool b);
+	void InheritStripControls(bool b);
 	void SetDetached(bool b = true) { m_bDetached = b; }
 	void SetInConfig(bool b);
 	void SetCreationDate(unsigned long u) { m_ulCreationDate = u; }
@@ -153,6 +155,8 @@ public:
 	unsigned int GetJoinTries() const { return m_uJoinTries; }
 	bool HasBufferCountSet() const { return m_bHasBufferCountSet; }
 	bool HasAutoClearChanBufferSet() const { return m_bHasAutoClearChanBufferSet; }
+	bool StripControls() const { return m_bStripControls; }
+	bool HasStripControlsSet() const { return m_bHasStripControlsSet; }
 	// !Getters
 private:
 protected:
@@ -171,6 +175,8 @@ protected:
 	unsigned long                m_ulCreationDate;
 	CIRCNetwork*                 m_pNetwork;
 	CNick                        m_Nick;
+	bool                         m_bStripControls;
+	bool                         m_bHasStripControlsSet;
 	unsigned int                 m_uJoinTries;
 	CString                      m_sDefaultModes;
 	std::map<CString,CNick>      m_msNicks;       // Todo: make this caseless (irc style)
