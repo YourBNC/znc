@@ -146,7 +146,6 @@ CIRCNetwork::CIRCNetwork(CUser *pUser, const CString& sName)
 {
 	SetUser(pUser);
 
-	SetStripControls(false);
 	SetIRCSSLVerifyEnabled(false);
 
 	m_RawBuffer.SetLineCount(100, true);   // This should be more than enough raws, especially since we are buffering the MOTD separately
@@ -183,7 +182,6 @@ void CIRCNetwork::Clone(const CIRCNetwork& Network, bool bCloneName) {
 	SetEncoding(Network.GetEncoding());
 	SetQuitMsg(Network.GetQuitMsg());
 	SetIRCSSLVerifyEnabled(Network.GetIRCSSLVerifyEnabled());
-	SetStripControls(Network.StripControls());
 	m_ssTrustedFingerprints = Network.m_ssTrustedFingerprints;
 
 	// Servers
@@ -353,7 +351,6 @@ bool CIRCNetwork::ParseConfig(CConfig *pConfig, CString& sError, bool bUpgrade) 
 		TOption<bool> BoolOptions[] = {
 			{ "ircconnectenabled", &CIRCNetwork::SetIRCConnectEnabled },
 			{ "sslverify", &CIRCNetwork::SetIRCSSLVerifyEnabled },
-			{ "stripcontrols", &CIRCNetwork::SetStripControls },
 		};
 		TOption<double> DoubleOptions[] = {
 			{ "floodrate", &CIRCNetwork::SetFloodRate },
@@ -509,7 +506,6 @@ CConfig CIRCNetwork::ToConfig() const {
 	config.AddKeyValuePair("FloodBurst", CString(GetFloodBurst()));
 	config.AddKeyValuePair("JoinDelay", CString(GetJoinDelay()));
 	config.AddKeyValuePair("Encoding", m_sEncoding);
-	config.AddKeyValuePair("StripControls", CString(StripControls()));
 
 	if (!m_sQuitMsg.empty()) {
 		config.AddKeyValuePair("QuitMsg", m_sQuitMsg);
@@ -1268,14 +1264,6 @@ void CIRCNetwork::CheckIRCConnect() {
 	// Do we want to connect?
 	if (GetIRCConnectEnabled() && GetIRCSock() == nullptr)
 		CZNC::Get().AddNetworkToQueue(this);
-}
-
-void CIRCNetwork::SetStripControls(bool b) {
-	for (CChan* pChan : GetChans()) {
-		pChan->InheritStripControls(b);
-	}
-
-	m_bStripControls = b;
 }
 
 bool CIRCNetwork::PutIRC(const CString& sLine) {

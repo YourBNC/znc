@@ -676,11 +676,6 @@ public:
 			o4["DisplayName"] = "Disabled";
 			if (pChan && pChan->IsDisabled()) { o4["Checked"] = "true"; }
 
-			CTemplate& o5 = Tmpl.AddRow("OptionLoop");
-			o5["Name"] = "stripcontrols";
-			o5["DisplayName"] = "Strip Controls";
-			if (pChan && pChan->StripControls()) { o5["Checked"] = "true"; }
-
 			FOR_EACH_MODULE(i, pNetwork) {
 				CTemplate& mod = Tmpl.AddRow("EmbeddedModuleLoop");
 				mod.insert(Tmpl.begin(), Tmpl.end());
@@ -743,11 +738,6 @@ public:
 			pChan->Disable();
 		else
 			pChan->Enable();
-
-		bool bStripControls = WebSock.GetParam("stripcontrols").ToBool();
-		if (pChan->StripControls() != bStripControls) {
-			pChan->SetStripControls(bStripControls);
-		}
 
 		CTemplate TmplMod;
 		TmplMod["User"] = pUser->GetUserName();
@@ -860,7 +850,6 @@ public:
 
 				Tmpl["QuitMsg"] = pNetwork->GetQuitMsg();
 				Tmpl["SSLVerify"] = CString(pNetwork->GetIRCSSLVerifyEnabled());
-				Tmpl["StripControls"] = CString(pNetwork->StripControls());
 				Tmpl["FloodProtection"] = CString(CIRCSock::IsFloodProtected(pNetwork->GetFloodRate()));
 				Tmpl["FloodRate"] = CString(pNetwork->GetFloodRate());
 				Tmpl["FloodBurst"] = CString(pNetwork->GetFloodBurst());
@@ -1027,11 +1016,6 @@ public:
 		}
 
 		pNetwork->SetJoinDelay(WebSock.GetParam("joindelay").ToUShort());
-
-		bool bStripControls = WebSock.GetParam("stripcontrols").ToBool();
-		if (pNetwork->StripControls() != bStripControls) {
-			pNetwork->SetStripControls(bStripControls);
-		}
 
 #ifdef HAVE_ICU
 		CString sEncodingUtf = WebSock.GetParam("encoding_utf");
