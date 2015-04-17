@@ -82,7 +82,7 @@ public:
 	}
 
 	void OnIRCConnected() override {
-		Log("[" + GetUser()->GetUserName() + "/" + GetNetwork()->GetName() + "] connected to IRC with server " + GetNetwork()->GetCurrentServer()->GetName() + " which has ip " + CString(GetNetwork()->GetIRCSock()->GetRemoteIP()) + " with reverse dns pointing to " + ResolveIp(GetNetwork()->GetIRCSock()->GetRemoteIP()));
+		Log("[" + GetUser()->GetUserName() + "/" + GetNetwork()->GetName() + "] connected to IRC - Host: " + GetNetwork()->GetCurrentServer()->GetName() + " IP: " + CString(GetNetwork()->GetIRCSock()->GetRemoteIP()) + " RDNS: " + ResolveIp(GetNetwork()->GetIRCSock()->GetRemoteIP()));
 	}
 
 	void OnIRCDisconnected() override {
