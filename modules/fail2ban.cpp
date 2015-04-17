@@ -27,12 +27,12 @@ public:
 		unsigned int timeout = sTimeout.ToUInt();
 
 		if (sAttempts.empty())
-			m_uiAllowedFailed = 2;
+			m_uiAllowedFailed = 6;
 		else
 			m_uiAllowedFailed = sAttempts.ToUInt();;
 
 		if (sArgs.empty()) {
-			timeout = 1;
+			timeout = 5;
 		} else if (timeout == 0 || m_uiAllowedFailed == 0 || !sArgs.Token(2, true).empty()) {
 			sMessage = "Invalid argument, must be the number of minutes "
 				"IPs are blocked after a failed login and can be "
