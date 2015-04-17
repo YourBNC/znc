@@ -545,7 +545,7 @@ void CClient::UserCommand(CString& sLine) {
 		for (const CChan *pChan : vChans) {
 			Table.AddRow();
 			Table.SetCell("Name", pChan->GetPermStr() + pChan->GetName());
-			Table.SetCell("Status", ((vChans[a]->IsOn()) ? ((vChans[a]->IsDetached()) ? "Detached" : "Joined") : ((vChans[a]->IsDisabled()) ? "Disabled" : "Trying")));
+			Table.SetCell("Status", ((pChan->IsOn()) ? ((pChan->IsDetached()) ? "Detached" : "Joined") : ((pChan->IsDisabled()) ? "Disabled" : "Trying")));
 			Table.SetCell("Conf", CString((pChan->InConfig()) ? "yes" : ""));
 			Table.SetCell("Buf", CString((pChan->HasBufferCountSet()) ? "*" : "") + CString(pChan->GetBufferCount()));
 			Table.SetCell("Clear", CString((pChan->HasAutoClearChanBufferSet()) ? "*" : "") + CString((pChan->AutoClearChanBuffer()) ? "yes" : ""));
@@ -1307,7 +1307,7 @@ void CClient::UserCommand(CString& sLine) {
 			return;
 		}
 
-		if (sHost.empty()) {
+		if (sArg.empty()) {
 			PutStatus("Usage: SetBindHost <host>");
 			return;
 		}

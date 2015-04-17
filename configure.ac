@@ -75,6 +75,8 @@ appendLD () {
 	fi
 }
 
+appendCXX -O2
+
 case "${host_os}" in
 	freebsd*)
 		# -D__GNU_LIBRARY__ makes this work on fbsd 4.11
