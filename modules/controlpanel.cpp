@@ -122,7 +122,7 @@ class CAdminMod : public CModule {
 #endif
 				{"QuitMsg",             str},
 				{"SSLVerify",           boolean},
-				{"StripControls",       boolean},
+				{"StripControls",       boolean}
 			};
 			PrintVarsHelp(sVarFilter, nvars, ARRAY_SIZE(nvars), "The following variables are available when using the SetNetwork/GetNetwork commands:");
 		}
@@ -141,22 +141,37 @@ class CAdminMod : public CModule {
 		}
 
 		if (sCmdFilter.empty())
-			PutModule("You can use $me as the user name for modifying your own user.");
+			PutModule("You can use $user as the user name and $network as the network name for modifying your own user and network.");
 	}
 
 	CUser* FindUser(const CString& sUsername) {
-		if (sUsername.Equals("$me"))
+		if (sUsername.Equals("$me") || sUsername.Equals("$user"))
 			return GetUser();
 		CUser *pUser = CZNC::Get().FindUser(sUsername);
 		if (!pUser) {
 			PutModule("Error: User [" + sUsername + "] not found.");
-			return NULL;
+			return nullptr;
 		}
 		if (pUser != GetUser() && !GetUser()->IsAdmin()) {
 			PutModule("Error: You need to have admin rights to modify other users!");
-			return NULL;
+			return nullptr;
 		}
 		return pUser;
+	}
+
+	CIRCNetwork* FindNetwork(CUser* pUser, const CString& sNetwork) {
+		if (sNetwork.Equals("$net") || sNetwork.Equals("$network")) {
+			if (pUser != GetUser()) {
+				PutModule("Error: You cannot use " + sNetwork + " to modify other users!");
+				return nullptr;
+			}
+			return CModule::GetNetwork();
+		}
+		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		if (!pNetwork) {
+			PutModule("Error: [" + pUser->GetUserName() + "] does not have a network named [" + sNetwork + "].");
+		}
+		return pNetwork;
 	}
 
 	void Get(const CString& sLine) {
@@ -447,19 +462,17 @@ class CAdminMod : public CModule {
 		const CString sUsername = sLine.Token(2);
 		const CString sNetwork = sLine.Token(3);
 
-		CUser *pUser = NULL;
-		CIRCNetwork *pNetwork = NULL;
+		CIRCNetwork *pNetwork = nullptr;
 
 		if (sUsername.empty()) {
-			pUser = GetUser();
 			pNetwork = CModule::GetNetwork();
 		} else {
-			pUser = FindUser(sUsername);
+			CUser *pUser = FindUser(sUsername);
 			if (!pUser) {
 				return;
 			}
 
-			pNetwork = pUser->FindNetwork(sNetwork);
+			pNetwork = FindNetwork(pUser, sNetwork);
 			if (!pNetwork && !sNetwork.empty()) {
 				PutModule("Network [" + sNetwork + "] not found.");
 				return;
@@ -508,19 +521,18 @@ class CAdminMod : public CModule {
 		const CString sNetwork = sLine.Token(3);
 		const CString sValue = sLine.Token(4, true);
 
-		CUser *pUser = NULL;
-		CIRCNetwork *pNetwork = NULL;
+		CIRCNetwork *pNetwork = nullptr;
 
 		if (sUsername.empty()) {
 			pUser = GetUser();
 			pNetwork = CModule::GetNetwork();
 		} else {
-			pUser = FindUser(sUsername);
+			CUser *pUser = FindUser(sUsername);
 			if (!pUser) {
 				return;
 			}
 
-			pNetwork = pUser->FindNetwork(sNetwork);
+			pNetwork = FindNetwork(pUser, sNetwork);
 			if (!pNetwork && !sNetwork.empty()) {
 				PutModule("Network [" + sNetwork + "] not found.");
 				return;
@@ -618,12 +630,13 @@ class CAdminMod : public CModule {
 			PutModule("Usage: AddChan <username> <network> <channel>");
 			return;
 		}
-		
-		CUser* pUser = FindUser(sUsername);
-		if (!pUser)
+
+		CUser *pUser = FindUser(sUsername);
+		if (!pUser) {
 			return;
-				
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		}
+						
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("Error: [" + sUsername + "] does not have a network named [" + sNetwork + "].");
 			return;
@@ -655,7 +668,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 		
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("Error: [" + sUsername + "] does not have a network named [" + sNetwork + "].");
 			return;
@@ -693,7 +706,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("[" + sUsername + "] does not have a network named [" + sNetwork + "]");
 			return;
@@ -757,7 +770,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("[" + sUsername + "] does not have a network named [" + sNetwork + "]");
 			return;
@@ -1026,8 +1039,7 @@ class CAdminMod : public CModule {
 			return;
 		}
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
-
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("[" + pUser->GetUserName() + "] does not have a network with the name [" + sNetwork + "]");
 			return;
@@ -1103,7 +1115,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("[" + sUsername + "] does not have a network with the name [" + sNetwork + "]");
 			return;
@@ -1113,6 +1125,39 @@ class CAdminMod : public CModule {
 			PutModule("Added IRC Server [" + sServer + "] for network [" + sNetwork + "] for user [" + pUser->GetUserName() + "].");
 		else
 			PutModule("Could not add IRC server [" + sServer + "] for network [" + sNetwork + "] for user [" + pUser->GetUserName() + "].");
+	}
+
+	void DelServer(const CString& sLine) {
+		CString sUsername = sLine.Token(1);
+		CString sNetwork = sLine.Token(2);
+		CString sServer = sLine.Token(3, true);
+		unsigned short uPort = sLine.Token(4).ToUShort();
+		CString sPass = sLine.Token(5);
+
+		if (sServer.empty()) {
+			PutModule("Usage: DelServer <username> <network> <server>");
+			return;
+		}
+
+		CUser* pUser = FindUser(sUsername);
+		if (!pUser)
+			return;
+
+		if (!m_pUser->IsAdmin()) {
+			PutModule("You are not allowed to delete servers.");
+			return;
+		}
+
+
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
+		if (!pNetwork) {
+			return;
+		}
+
+		if (pNetwork->DelServer(sServer, uPort, sPass))
+			PutModule("Deleted IRC Server [" + sServer + "] for network [" + sNetwork + "] for user [" + pUser->GetUserName() + "].");
+		else
+			PutModule("Could not delete IRC server [" + sServer + "] for network [" + sNetwork + "] for user [" + pUser->GetUserName() + "].");
 	}
 
 	void ReconnectUser(const CString& sLine) {
@@ -1130,7 +1175,7 @@ class CAdminMod : public CModule {
 			return;
 		}
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("[" + sUserName + "] does not have a network with the name [" + sNetwork + "]");
 			return;
@@ -1167,7 +1212,7 @@ class CAdminMod : public CModule {
 			return;
 		}
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("[" + sUserName + "] does not have a network with the name [" + sNetwork + "]");
 			return;
@@ -1294,7 +1339,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		LoadModuleFor(pUser->GetModules(), sModName, sArgs, CModInfo::UserModule, pUser, NULL);
+		LoadModuleFor(pUser->GetModules(), sModName, sArgs, CModInfo::UserModule, pUser, nullptr);
 	}
 
 	void LoadModuleForNetwork(const CString& sLine) {
@@ -1312,7 +1357,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("Network not found");
 			return;
@@ -1370,7 +1415,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("Network not found");
 			return;
@@ -1426,7 +1471,7 @@ class CAdminMod : public CModule {
 		if (!pUser)
 			return;
 
-		CIRCNetwork* pNetwork = pUser->FindNetwork(sNetwork);
+		CIRCNetwork* pNetwork = FindNetwork(pUser, sNetwork);
 		if (!pNetwork) {
 			PutModule("Network not found");
 			return;
@@ -1442,7 +1487,7 @@ public:
 		AddCommand("Get",          static_cast<CModCommand::ModCmdFunc>(&CAdminMod::Get),
 			"<variable> [username]",                          "Prints the variable's value for the given or current user");
 		AddCommand("Set",          static_cast<CModCommand::ModCmdFunc>(&CAdminMod::Set),
-			"<variable> <username> <value>",                  "Sets the variable's value for the given user (use $me for the current user)");
+			"<variable> <username> <value>",                  "Sets the variable's value for the given user");
 		AddCommand("GetNetwork",   static_cast<CModCommand::ModCmdFunc>(&CAdminMod::GetNetwork),
 			"<variable> [username] [network]",                "Prints the variable's value for the given network");
 		AddCommand("SetNetwork",   static_cast<CModCommand::ModCmdFunc>(&CAdminMod::SetNetwork),
@@ -1465,6 +1510,8 @@ public:
 			"<old username> <new username>",                  "Clones a user");
 		AddCommand("AddServer",    static_cast<CModCommand::ModCmdFunc>(&CAdminMod::AddServer),
 			"<username> <network> <server>",                  "Adds a new IRC server for the given or current user");
+		AddCommand("DelServer",    static_cast<CModCommand::ModCmdFunc>(&CAdminMod::DelServer),
+			"<username> <network> <server>",                  "Deletes an IRC server from the given or current user");
 		AddCommand("Reconnect",    static_cast<CModCommand::ModCmdFunc>(&CAdminMod::ReconnectUser),
 			"<username> <network>",                           "Cycles the user's IRC server connection");
 		AddCommand("Disconnect",   static_cast<CModCommand::ModCmdFunc>(&CAdminMod::DisconnectUser),

@@ -25,7 +25,7 @@ using std::set;
 using std::vector;
 using std::map;
 
-#define IRCSOCKMODULECALL(macFUNC, macEXITER) NETWORKMODULECALL(macFUNC, m_pNetwork->GetUser(), m_pNetwork, NULL, macEXITER)
+#define IRCSOCKMODULECALL(macFUNC, macEXITER) NETWORKMODULECALL(macFUNC, m_pNetwork->GetUser(), m_pNetwork, nullptr, macEXITER)
 // These are used in OnGeneralCTCP()
 const time_t CIRCSock::m_uCTCPFloodTime = 5;
 const unsigned int CIRCSock::m_uCTCPFloodCount = 5;
@@ -38,11 +38,12 @@ static const double FLOOD_MINIMAL_RATE = 0.3;
 class CIRCFloodTimer : public CCron {
 		CIRCSock* m_pSock;
 	public:
-		CIRCFloodTimer(CIRCSock* pSock) {
-			m_pSock = pSock;
+		CIRCFloodTimer(CIRCSock* pSock) : m_pSock(pSock) {
 			StartMaxCycles(m_pSock->m_fFloodRate, 0);
 		}
-		virtual void RunJob() {
+		CIRCFloodTimer(const CIRCFloodTimer&) = delete;
+		CIRCFloodTimer& operator=(const CIRCFloodTimer&) = delete;
+		void RunJob() override {
 			if (m_pSock->m_iSendsAllowed < m_pSock->m_uFloodBurst) {
 				m_pSock->m_iSendsAllowed++;
 			}
@@ -54,26 +55,37 @@ bool CIRCSock::IsFloodProtected(double fRate) {
 	return fRate > FLOOD_MINIMAL_RATE;
 }
 
-CIRCSock::CIRCSock(CIRCNetwork* pNetwork) : CIRCSocket() {
-	m_pNetwork = pNetwork;
-	m_bAuthed = false;
-	m_bNamesx = false;
-	m_bUHNames = false;
-	m_fFloodRate = m_pNetwork->GetFloodRate();
-	m_uFloodBurst = m_pNetwork->GetFloodBurst();
-	m_bFloodProtection = IsFloodProtected(m_fFloodRate);
-	m_iSendsAllowed = m_uFloodBurst;
+CIRCSock::CIRCSock(CIRCNetwork* pNetwork)
+		: CIRCSocket(),
+		  m_bAuthed(false),
+		  m_bNamesx(false),
+		  m_bUHNames(false),
+		  m_sPerms("*!@%+"),
+		  m_sPermModes("qaohv"),
+		  m_scUserModes(),
+		  m_mueChanModes(),
+		  m_pNetwork(pNetwork),
+		  m_Nick(),
+		  m_sPass(""),
+		  m_msChans(),
+		  m_uMaxNickLen(9),
+		  m_uCapPaused(0),
+		  m_ssAcceptedCaps(),
+		  m_ssPendingCaps(),
+		  m_lastCTCP(0),
+		  m_uNumCTCP(0),
+		  m_mISupport(),
+		  m_vsSendQueue(),
+		  m_iSendsAllowed(pNetwork->GetFloodBurst()),
+		  m_uFloodBurst(pNetwork->GetFloodBurst()),
+		  m_fFloodRate(pNetwork->GetFloodRate()),
+		  m_bFloodProtection(IsFloodProtected(pNetwork->GetFloodRate()))
+{
 	EnableReadLine();
 	m_Nick.SetIdent(m_pNetwork->GetIdent());
 	m_Nick.SetHost(m_pNetwork->GetBindHost());
 	SetEncoding(m_pNetwork->GetEncoding());
 
-	m_uMaxNickLen = 9;
-	m_uCapPaused = 0;
-	m_lastCTCP = 0;
-	m_uNumCTCP = 0;
-	m_sPerms = "*!@%+";
-	m_sPermModes = "qaohv";
 	m_mueChanModes['b'] = ListArg;
 	m_mueChanModes['e'] = ListArg;
 	m_mueChanModes['I'] = ListArg;
@@ -100,14 +112,14 @@ CIRCSock::~CIRCSock() {
 	}
 
 	const vector<CChan*>& vChans = m_pNetwork->GetChans();
-	for (unsigned int a = 0; a < vChans.size(); a++) {
-		vChans[a]->Reset();
+	for (CChan* pChan : vChans) {
+		pChan->Reset();
 	}
 
 	m_pNetwork->IRCDisconnected();
 
-	for (map<CString, CChan*>::iterator a = m_msChans.begin(); a != m_msChans.end(); ++a) {
-		delete a->second;
+	for (const auto& it : m_msChans) {
+		delete it.second;
 	}
 
 	Quit();
@@ -183,8 +195,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 
 				const vector<CClient*>& vClients = m_pNetwork->GetClients();
 
-				for (unsigned int a = 0; a < vClients.size(); a++) {
-					CClient* pClient = vClients[a];
+				for (CClient* pClient : vClients) {
 					CString sClientNick = pClient->GetNick(false);
 
 					if (!sClientNick.Equals(sNick)) {
@@ -345,18 +356,15 @@ void CIRCSock::ReadLine(const CString& sData) {
 
 				const vector<CChan*>& vChans = m_pNetwork->GetChans();
 
-				for (unsigned int a = 0; a < vChans.size(); a++) {
-					vChans[a]->OnWho(sNick, sIdent, sHost);
+				for (CChan* pChan : vChans) {
+					pChan->OnWho(sNick, sIdent, sHost);
 				}
 
 				if (m_bNamesx && (sNick.size() > 1) && IsPermChar(sNick[1])) {
 					// sLine uses multi-prefix
 
 					const vector<CClient*>& vClients = m_pNetwork->GetClients();
-					vector<CClient*>::const_iterator it;
-					for (it = vClients.begin(); it != vClients.end(); ++it) {
-						CClient *pClient = *it;
-
+					for (CClient* pClient : vClients) {
 						if (pClient->HasNamesx()) {
 							m_pNetwork->PutUser(sLine, pClient);
 						} else {
@@ -504,9 +512,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 			vector<CChan*> vFoundChans;
 			const vector<CChan*>& vChans = m_pNetwork->GetChans();
 
-			for (unsigned int a = 0; a < vChans.size(); a++) {
-				CChan* pChan = vChans[a];
-
+			for (CChan* pChan : vChans) {
 				if (pChan->ChangeNick(Nick.GetNick(), sNewNick)) {
 					vFoundChans.push_back(pChan);
 
@@ -545,9 +551,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 			vector<CChan*> vFoundChans;
 			const vector<CChan*>& vChans = m_pNetwork->GetChans();
 
-			for (unsigned int a = 0; a < vChans.size(); a++) {
-				CChan* pChan = vChans[a];
-
+			for (CChan* pChan : vChans) {
 				if (pChan->RemNick(Nick.GetNick())) {
 					vFoundChans.push_back(pChan);
 
@@ -630,7 +634,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 				CString sModeArg = sModes.Token(0);
 				bool bAdd = true;
 /* no module call defined (yet?)
-				MODULECALL(OnRawUserMode(*pOpNick, *this, sModeArg, sArgs), m_pNetwork->GetUser(), NULL, );
+				MODULECALL(OnRawUserMode(*pOpNick, *this, sModeArg, sArgs), m_pNetwork->GetUser(), nullptr, );
 */
 				for (unsigned int a = 0; a < sModeArg.size(); a++) {
 					const unsigned char& uMode = sModeArg[a];
@@ -685,10 +689,6 @@ void CIRCSock::ReadLine(const CString& sData) {
 				sMsg.RightChomp();
 
 				if (sTarget.Equals(GetNick())) {
-					if (m_pNetwork->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnCTCPReply(Nick, sMsg)) {
 						return;
 					}
@@ -698,19 +698,10 @@ void CIRCSock::ReadLine(const CString& sData) {
 				return;
 			} else {
 				if (sTarget.Equals(GetNick())) {
-					if (m_pNetwork->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnPrivNotice(Nick, sMsg)) {
 						return;
 					}
 				} else {
-					CChan* pChan = m_pNetwork->FindChan(sTarget);
-					if (pChan && pChan->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnChanNotice(Nick, sTarget, sMsg)) {
 						return;
 					}
@@ -736,7 +727,7 @@ void CIRCSock::ReadLine(const CString& sData) {
 				if (bReturn) return;
 
 				pChan->SetTopicOwner(Nick.GetNick());
-				pChan->SetTopicDate((unsigned long) time(NULL));
+				pChan->SetTopicDate((unsigned long) time(nullptr));
 				pChan->SetTopic(sTopic);
 
 				if (pChan->IsDetached()) {
@@ -755,19 +746,10 @@ void CIRCSock::ReadLine(const CString& sData) {
 				sMsg.RightChomp();
 
 				if (sTarget.Equals(GetNick())) {
-					if (m_pNetwork->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnPrivCTCP(Nick, sMsg)) {
 						return;
 					}
 				} else {
-					CChan* pChan = m_pNetwork->FindChan(sTarget);
-					if (pChan && pChan->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnChanCTCP(Nick, sTarget, sMsg)) {
 						return;
 					}
@@ -777,19 +759,10 @@ void CIRCSock::ReadLine(const CString& sData) {
 				return;
 			} else {
 				if (sTarget.Equals(GetNick())) {
-					if (m_pNetwork->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnPrivMsg(Nick, sMsg)) {
 						return;
 					}
 				} else {
-					CChan* pChan = m_pNetwork->FindChan(sTarget);
-					if (pChan && pChan->StripControls()) {
-						sMsg.StripControls();
-					}
-
 					if (OnChanMsg(Nick, sTarget, sMsg)) {
 						return;
 					}
@@ -833,12 +806,11 @@ void CIRCSock::ReadLine(const CString& sData) {
 
 				if (sSubCmd == "LS") {
 					VCString vsTokens;
-					VCString::iterator it;
 					sArgs.Split(" ", vsTokens, false);
 
-					for (it = vsTokens.begin(); it != vsTokens.end(); ++it) {
-						if (OnServerCapAvailable(*it) || *it == "multi-prefix" || *it == "userhost-in-names") {
-							m_ssPendingCaps.insert(*it);
+					for (const CString& sCap : vsTokens) {
+						if (OnServerCapAvailable(sCap) || sCap == "multi-prefix" || sCap == "userhost-in-names") {
+							m_ssPendingCaps.insert(sCap);
 						}
 					}
 				} else if (sSubCmd == "ACK") {
@@ -954,7 +926,7 @@ bool CIRCSock::OnGeneralCTCP(CNick& Nick, CString& sMessage) {
 	}
 
 	if (!sReply.empty()) {
-		time_t now = time(NULL);
+		time_t now = time(nullptr);
 		// If the last CTCP is older than m_uCTCPFloodTime, reset the counter
 		if (m_lastCTCP + m_uCTCPFloodTime < now)
 			m_uNumCTCP = 0;
@@ -1136,8 +1108,8 @@ void CIRCSock::Disconnected() {
 	// otherwise, on reconnect, it might think it still
 	// had user modes that it actually doesn't have.
 	CString sUserMode;
-	for (set<unsigned char>::const_iterator it = m_scUserModes.begin(); it != m_scUserModes.end(); ++it) {
-		sUserMode += *it;
+	for (unsigned char cMode : m_scUserModes) {
+		sUserMode += cMode;
 	}
 	if (!sUserMode.empty()) {
 		m_pNetwork->PutUser(":" + m_pNetwork->GetIRCNick().GetNickMask() + " MODE " + m_pNetwork->GetIRCNick().GetNick() + " :-" + sUserMode);
@@ -1223,13 +1195,12 @@ void CIRCSock::ReachedMaxBuffer() {
 
 void CIRCSock::ParseISupport(const CString& sLine) {
 	VCString vsTokens;
-	VCString::iterator it;
 
 	sLine.Split(" ", vsTokens, false);
 
-	for (it = vsTokens.begin(); it != vsTokens.end(); ++it) {
-		CString sName = it->Token(0, false, "=");
-		CString sValue = it->Token(1, true, "=");
+	for (const CString& sToken : vsTokens) {
+		CString sName = sToken.Token(0, false, "=");
+		CString sValue = sToken.Token(1, true, "=");
 
 		if (0 < sName.length() && ':' == sName[0]) {
 			break;
@@ -1291,10 +1262,9 @@ CString CIRCSock::GetISupport(const CString& sKey, const CString& sDefault) cons
 
 void CIRCSock::ForwardRaw353(const CString& sLine) const {
 	const vector<CClient*>& vClients = m_pNetwork->GetClients();
-	vector<CClient*>::const_iterator it;
 
-	for (it = vClients.begin(); it != vClients.end(); ++it) {
-		ForwardRaw353(sLine, *it);
+	for (CClient* pClient : vClients) {
+		ForwardRaw353(sLine, pClient);
 	}
 }
 
@@ -1309,12 +1279,10 @@ void CIRCSock::ForwardRaw353(const CString& sLine, CClient* pClient) const {
 		CString sTmp = sLine.Token(0, false, " :") + " :";
 
 		VCString vsNicks;
-		VCString::const_iterator it;
 
 		// This loop runs once for every nick on the channel
 		sNicks.Split(" ", vsNicks, false);
-		for (it = vsNicks.begin(); it != vsNicks.end(); ++it) {
-			CString sNick = *it;
+		for (CString sNick : vsNicks) {
 			if (sNick.empty())
 				break;
 
@@ -1416,8 +1384,8 @@ CIRCSock::EChanModeArgs CIRCSock::GetModeType(unsigned char uMode) const {
 }
 
 void CIRCSock::ResetChans() {
-	for (map<CString, CChan*>::iterator a = m_msChans.begin(); a != m_msChans.end(); ++a) {
-		a->second->Reset();
+	for (const auto& it : m_msChans) {
+		it.second->Reset();
 	}
 }
 

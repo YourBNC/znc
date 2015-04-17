@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _QUERY_H
-#define _QUERY_H
+#ifndef ZNC_QUERY_H
+#define ZNC_QUERY_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -31,11 +31,14 @@ public:
 	CQuery(const CString& sName, CIRCNetwork* pNetwork);
 	~CQuery();
 
+	CQuery(const CQuery&) = delete;
+	CQuery& operator=(const CQuery&) = delete;
+
 	// Buffer
 	const CBuffer& GetBuffer() const { return m_Buffer; }
 	unsigned int GetBufferCount() const { return m_Buffer.GetLineCount(); }
 	bool SetBufferCount(unsigned int u, bool bForce = false) { return m_Buffer.SetLineCount(u, bForce); }
-	size_t AddBuffer(const CString& sFormat, const CString& sText = "", const timeval* ts = NULL) { return m_Buffer.AddLine(sFormat, sText, ts); }
+	size_t AddBuffer(const CString& sFormat, const CString& sText = "", const timeval* ts = nullptr) { return m_Buffer.AddLine(sFormat, sText, ts); }
 	void ClearBuffer() { m_Buffer.Clear(); }
 	void SendBuffer(CClient* pClient);
 	void SendBuffer(CClient* pClient, const CBuffer& Buffer);
@@ -51,4 +54,4 @@ private:
 	CBuffer                      m_Buffer;
 };
 
-#endif // !_QUERY_H
+#endif // !ZNC_QUERY_H

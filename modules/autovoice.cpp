@@ -41,7 +41,7 @@ public:
 
 	bool ChannelMatches(const CString& sChan) const {
 		for (set<CString>::const_iterator it = m_ssChans.begin(); it != m_ssChans.end(); ++it) {
-			if (sChan.AsLower().WildCmp(*it)) {
+			if (sChan.AsLower().WildCmp(*it, CString::CaseInsensitive)) {
 				return true;
 			}
 		}
@@ -50,7 +50,7 @@ public:
 	}
 
 	bool HostMatches(const CString& sHostmask) {
-		return sHostmask.WildCmp(m_sHostmask);
+		return sHostmask.WildCmp(m_sHostmask, CString::CaseInsensitive);
 	}
 
 	CString GetChannels() const {
@@ -124,7 +124,7 @@ public:
 		AddCommand("DelUser", static_cast<CModCommand::ModCmdFunc>(&CAutoVoiceMod::OnDelUserCommand), "<user>", "Removes a user");
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sMessage) override {
+	bool OnLoad(const CString& sArgs, CString& sMessage) override {
 		// Load the chans from the command line
 		unsigned int a = 0;
 		VCString vsChans;
@@ -159,7 +159,7 @@ public:
 		m_msUsers.clear();
 	}
 
-	virtual void OnJoin(const CNick& Nick, CChan& Channel) override {
+	void OnJoin(const CNick& Nick, CChan& Channel) override {
 		// If we have ops in this chan
 		if (Channel.HasPerm(CChan::Op) || Channel.HasPerm(CChan::HalfOp)) {
 			for (map<CString, CAutoVoiceUser*>::iterator it = m_msUsers.begin(); it != m_msUsers.end(); ++it) {
@@ -267,7 +267,7 @@ public:
 	CAutoVoiceUser* FindUser(const CString& sUser) {
 		map<CString, CAutoVoiceUser*>::iterator it = m_msUsers.find(sUser.AsLower());
 
-		return (it != m_msUsers.end()) ? it->second : NULL;
+		return (it != m_msUsers.end()) ? it->second : nullptr;
 	}
 
 	CAutoVoiceUser* FindUserByHost(const CString& sHostmask, const CString& sChannel = "") {
@@ -279,7 +279,7 @@ public:
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	void DelUser(const CString& sUser) {
@@ -298,7 +298,7 @@ public:
 	CAutoVoiceUser* AddUser(const CString& sUser, const CString& sHost, const CString& sChans) {
 		if (m_msUsers.find(sUser) != m_msUsers.end()) {
 			PutModule("That user already exists");
-			return NULL;
+			return nullptr;
 		}
 
 		CAutoVoiceUser* pUser = new CAutoVoiceUser(sUser, sHost, sChans);

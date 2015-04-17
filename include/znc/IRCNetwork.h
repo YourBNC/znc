@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _IRCNETWORK_H
-#define _IRCNETWORK_H
+#ifndef ZNC_IRCNETWORK_H
+#define ZNC_IRCNETWORK_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -43,6 +43,9 @@ public:
 	CIRCNetwork(CUser *pUser, const CString& sName);
 	CIRCNetwork(CUser *pUser, const CIRCNetwork& Network);
 	~CIRCNetwork();
+
+	CIRCNetwork(const CIRCNetwork&) = delete;
+	CIRCNetwork& operator=(const CIRCNetwork&) = delete;
 
 	enum {
 		JOIN_FREQUENCY = 30,
@@ -86,9 +89,9 @@ public:
 	const CModules& GetModules() const { return *m_pModules; }
 	// !Modules
 
-	bool PutUser(const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutStatus(const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutModule(const CString& sModule, const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
+	bool PutUser(const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutStatus(const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutModule(const CString& sModule, const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
 
 	const std::vector<CChan*>& GetChans() const;
 	CChan* FindChan(CString sName) const;
@@ -164,6 +167,8 @@ public:
 	void AddNoticeBuffer(const CString& sFormat, const CString& sText = "") { m_NoticeBuffer.AddLine(sFormat, sText); }
 	void UpdateNoticeBuffer(const CString& sMatch, const CString& sFormat, const CString& sText = "") { m_NoticeBuffer.UpdateLine(sMatch, sFormat, sText); }
 	void ClearNoticeBuffer() { m_NoticeBuffer.Clear(); }
+
+	void ClearQueryBuffer();
 	// !Buffers
 
 	// la
@@ -250,4 +255,4 @@ protected:
 	unsigned short int m_uJoinDelay;
 };
 
-#endif // !_IRCNETWORK_H
+#endif // !ZNC_IRCNETWORK_H

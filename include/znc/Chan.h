@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _CHAN_H
-#define _CHAN_H
+#ifndef ZNC_CHAN_H
+#define ZNC_CHAN_H
 
 #include <znc/zncconfig.h>
 #include <znc/Nick.h>
@@ -56,22 +56,25 @@ public:
 		M_Except     = 'e'
 	} EModes;
 
-	CChan(const CString& sName, CIRCNetwork* pNetwork, bool bInConfig, CConfig *pConfig = NULL);
+	CChan(const CString& sName, CIRCNetwork* pNetwork, bool bInConfig, CConfig *pConfig = nullptr);
 	~CChan();
+
+	CChan(const CChan&) = delete;
+	CChan& operator=(const CChan&) = delete;
 
 	void Reset();
 	CConfig ToConfig() const;
 	void Clone(CChan& chan);
 	void Cycle() const;
 	void JoinUser(const CString& sKey = "");
-	void AttachUser(CClient* pClient = NULL);
+	void AttachUser(CClient* pClient = nullptr);
 	void DetachUser();
 
 	void OnWho(const CString& sNick, const CString& sIdent, const CString& sHost);
 
 	// Modes
 	void SetModes(const CString& s);
-	void ModeChange(const CString& sModes, const CNick* OpNick = NULL);
+	void ModeChange(const CString& sModes, const CNick* OpNick = nullptr);
 	bool AddMode(unsigned char uMode, const CString& sArg);
 	bool RemMode(unsigned char uMode);
 	CString GetModeString() const;
@@ -94,7 +97,7 @@ public:
 	unsigned int GetBufferCount() const { return m_Buffer.GetLineCount(); }
 	bool SetBufferCount(unsigned int u, bool bForce = false) { m_bHasBufferCountSet = true; return m_Buffer.SetLineCount(u, bForce); }
 	void InheritBufferCount(unsigned int u, bool bForce = false) { if (!m_bHasBufferCountSet) m_Buffer.SetLineCount(u, bForce); }
-	size_t AddBuffer(const CString& sFormat, const CString& sText = "", const timeval* ts = NULL) { return m_Buffer.AddLine(sFormat, sText, ts); }
+	size_t AddBuffer(const CString& sFormat, const CString& sText = "", const timeval* ts = nullptr) { return m_Buffer.AddLine(sFormat, sText, ts); }
 	void ClearBuffer() { m_Buffer.Clear(); }
 	void SendBuffer(CClient* pClient);
 	void SendBuffer(CClient* pClient, const CBuffer& Buffer);
@@ -117,8 +120,6 @@ public:
 	void SetDefaultModes(const CString& s) { m_sDefaultModes = s; }
 	void SetAutoClearChanBuffer(bool b);
 	void InheritAutoClearChanBuffer(bool b);
-	void SetStripControls(bool b);
-	void InheritStripControls(bool b);
 	void SetDetached(bool b = true) { m_bDetached = b; }
 	void SetInConfig(bool b);
 	void SetCreationDate(unsigned long u) { m_ulCreationDate = u; }
@@ -146,14 +147,12 @@ public:
 	size_t GetNickCount() const { return m_msNicks.size(); }
 	bool AutoClearChanBuffer() const { return m_bAutoClearChanBuffer; }
 	bool IsDetached() const { return m_bDetached; }
-	bool StripControls() const { return m_bStripControls; }
 	bool InConfig() const { return m_bInConfig; }
 	unsigned long GetCreationDate() const { return m_ulCreationDate; }
 	bool IsDisabled() const { return m_bDisabled; }
 	unsigned int GetJoinTries() const { return m_uJoinTries; }
 	bool HasBufferCountSet() const { return m_bHasBufferCountSet; }
 	bool HasAutoClearChanBufferSet() const { return m_bHasAutoClearChanBufferSet; }
-	bool HasStripControlsSet() const { return m_bHasStripControlsSet; }
 	// !Getters
 private:
 protected:
@@ -164,8 +163,6 @@ protected:
 	bool                         m_bDisabled;
 	bool                         m_bHasBufferCountSet;
 	bool                         m_bHasAutoClearChanBufferSet;
-	bool                         m_bStripControls;
-	bool                         m_bHasStripControlsSet;
 	CString                      m_sName;
 	CString                      m_sKey;
 	CString                      m_sTopic;
@@ -183,4 +180,4 @@ protected:
 	std::map<unsigned char, CString> m_musModes;
 };
 
-#endif // !_CHAN_H
+#endif // !ZNC_CHAN_H

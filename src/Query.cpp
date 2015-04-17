@@ -20,10 +20,7 @@
 
 using std::vector;
 
-CQuery::CQuery(const CString& sName, CIRCNetwork* pNetwork) {
-	m_sName = sName;
-	m_pNetwork = pNetwork;
-
+CQuery::CQuery(const CString& sName, CIRCNetwork* pNetwork) : m_sName(sName), m_pNetwork(pNetwork), m_Buffer() {
 	SetBufferCount(m_pNetwork->GetUser()->GetBufferCount(), true);
 }
 
@@ -39,8 +36,8 @@ void CQuery::SendBuffer(CClient* pClient, const CBuffer& Buffer) {
 		// Based on CChan::SendBuffer()
 		if (!Buffer.IsEmpty()) {
 			const vector<CClient*> & vClients = m_pNetwork->GetClients();
-			for (size_t uClient = 0; uClient < vClients.size(); ++uClient) {
-				CClient * pUseClient = (pClient ? pClient : vClients[uClient]);
+			for (CClient* pEachClient : vClients) {
+				CClient * pUseClient = (pClient ? pClient : pEachClient);
 
 				MCString msParams;
 				msParams["target"] = pUseClient->GetNick();
@@ -73,7 +70,7 @@ void CQuery::SendBuffer(CClient* pClient, const CBuffer& Buffer) {
 						CUtils::SetMessageTags(sLine, msBatchTags);
 					}
 					bool bContinue = false;
-					NETWORKMODULECALL(OnPrivBufferPlayLine2(*pUseClient, sLine, BufLine.GetTime()), m_pNetwork->GetUser(), m_pNetwork, NULL, &bContinue);
+					NETWORKMODULECALL(OnPrivBufferPlayLine2(*pUseClient, sLine, BufLine.GetTime()), m_pNetwork->GetUser(), m_pNetwork, nullptr, &bContinue);
 					if (bContinue) continue;
 					m_pNetwork->PutUser(sLine, pUseClient);
 				}

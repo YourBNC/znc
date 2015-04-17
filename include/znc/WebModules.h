@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _WEBMODULES_H
-#define _WEBMODULES_H
+#ifndef ZNC_WEBMODULES_H
+#define ZNC_WEBMODULES_H
 
 #include <znc/zncconfig.h>
 #include <znc/Template.h>
@@ -36,7 +36,7 @@ public:
 	CZNCTagHandler(CWebSock& pWebSock);
 	virtual ~CZNCTagHandler() {}
 
-	virtual bool HandleTag(CTemplate& Tmpl, const CString& sName, const CString& sArgs, CString& sOutput);
+	bool HandleTag(CTemplate& Tmpl, const CString& sName, const CString& sArgs, CString& sOutput) override;
 private:
 	CWebSock& m_WebSock;
 };
@@ -47,11 +47,14 @@ public:
 	CWebSession(const CString& sId, const CString& sIP);
 	~CWebSession();
 
+	CWebSession(const CWebSession&) = delete;
+	CWebSession& operator=(const CWebSession&) = delete;
+
 	const CString& GetId() const { return m_sId; }
 	const CString& GetIP() const { return m_sIP; }
 	CUser* GetUser() const { return m_pUser; }
 	time_t GetLastActive() const { return m_tmLastActive; }
-	bool IsLoggedIn() const { return m_pUser != NULL; }
+	bool IsLoggedIn() const { return m_pUser != nullptr; }
 	bool IsAdmin() const;
 	void UpdateLastActive();
 
@@ -73,12 +76,10 @@ private:
 
 class CWebSubPage {
 public:
-	CWebSubPage(const CString& sName, const CString& sTitle = "", unsigned int uFlags = 0) : m_sName(sName), m_sTitle(sTitle) {
-		m_uFlags = uFlags;
+	CWebSubPage(const CString& sName, const CString& sTitle = "", unsigned int uFlags = 0) : m_uFlags(uFlags), m_sName(sName), m_sTitle(sTitle), m_vParams() {
 	}
 
-	CWebSubPage(const CString& sName, const CString& sTitle, const VPair& vParams, unsigned int uFlags = 0) : m_sName(sName), m_sTitle(sTitle), m_vParams(vParams) {
-		m_uFlags = uFlags;
+	CWebSubPage(const CString& sName, const CString& sTitle, const VPair& vParams, unsigned int uFlags = 0) : m_uFlags(uFlags), m_sName(sName), m_sTitle(sTitle), m_vParams(vParams) {
 	}
 
 	virtual ~CWebSubPage() {}
@@ -125,8 +126,8 @@ public:
 	bool OnLogin(const CString& sUser, const CString& sPass, bool bBasic) override;
 	void OnPageRequest(const CString& sURI) override;
 
-	EPageReqResult PrintTemplate(const CString& sPageName, CString& sPageRet, CModule* pModule = NULL);
-	EPageReqResult PrintStaticFile(const CString& sPath, CString& sPageRet, CModule* pModule = NULL);
+	EPageReqResult PrintTemplate(const CString& sPageName, CString& sPageRet, CModule* pModule = nullptr);
+	EPageReqResult PrintStaticFile(const CString& sPath, CString& sPageRet, CModule* pModule = nullptr);
 
 	CString FindTmpl(CModule* pModule, const CString& sName);
 
@@ -134,7 +135,7 @@ public:
 
 	std::shared_ptr<CWebSession> GetSession();
 
-	virtual Csock* GetSockObj(const CString& sHost, unsigned short uPort);
+	Csock* GetSockObj(const CString& sHost, unsigned short uPort) override;
 	static CString GetSkinPath(const CString& sSkinName);
 	void GetAvailSkins(VCString& vRet) const;
 	CString GetSkinName();
@@ -147,7 +148,7 @@ public:
 protected:
 	using CHTTPSock::PrintErrorPage;
 
-	bool AddModLoop(const CString& sLoopName, CModule& Module, CTemplate *pTemplate = NULL);
+	bool AddModLoop(const CString& sLoopName, CModule& Module, CTemplate *pTemplate = nullptr);
 	VCString GetDirs(CModule* pModule, bool bIsTemplate);
 	void SetPaths(CModule* pModule, bool bIsTemplate = false);
 	void SetVars();
@@ -167,4 +168,4 @@ private:
 	static const unsigned int m_uiMaxSessions;
 };
 
-#endif // !_WEBMODULES_H
+#endif // !ZNC_WEBMODULES_H

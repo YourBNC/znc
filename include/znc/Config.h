@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef ZNC_CONFIG_H
+#define ZNC_CONFIG_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -35,6 +35,8 @@ struct CConfigEntry {
 
 class CConfig {
 public:
+	CConfig() : m_ConfigEntries(), m_SubConfigs() {}
+
 	typedef std::map<CString, VCString> EntryMap;
 	typedef std::map<CString, CConfigEntry> SubConfig;
 	typedef std::map<CString, SubConfig> SubConfigMap;
@@ -169,4 +171,4 @@ private:
 	SubConfigMap m_SubConfigs;
 };
 
-#endif // !CONFIG_H
+#endif // !ZNC_CONFIG_H

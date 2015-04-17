@@ -38,11 +38,11 @@ public:
 	}
 
 	bool IsMatch(const CString& sChan, const CString& sHost, const CString& sMessage) const {
-		if (!sHost.WildCmp(m_sHostmaskWildcard))
+		if (!sHost.WildCmp(m_sHostmaskWildcard, CString::CaseInsensitive))
 			return false;
-		if (!sChan.WildCmp(m_sChannelWildcard))
+		if (!sChan.WildCmp(m_sChannelWildcard, CString::CaseInsensitive))
 			return false;
-		if (!sMessage.WildCmp(m_pModule->ExpandString(m_sSearchWildcard)))
+		if (!sMessage.WildCmp(m_pModule->ExpandString(m_sSearchWildcard), CString::CaseInsensitive))
 			return false;
 		return true;
 	}
@@ -162,7 +162,7 @@ public:
 	virtual ~CChanAttach() {
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sMessage) override {
+	bool OnLoad(const CString& sArgs, CString& sMessage) override {
 		VCString vsChans;
 		sArgs.Split(" ", vsChans, false);
 
@@ -217,17 +217,17 @@ public:
 		}
 	}
 
-	virtual EModRet OnChanNotice(CNick& Nick, CChan& Channel, CString& sMessage) override {
+	EModRet OnChanNotice(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		TryAttach(Nick, Channel, sMessage);
 		return CONTINUE;
 	}
 
-	virtual EModRet OnChanMsg(CNick& Nick, CChan& Channel, CString& sMessage) override {
+	EModRet OnChanMsg(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		TryAttach(Nick, Channel, sMessage);
 		return CONTINUE;
 	}
 
-	virtual EModRet OnChanAction(CNick& Nick, CChan& Channel, CString& sMessage) override {
+	EModRet OnChanAction(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		TryAttach(Nick, Channel, sMessage);
 		return CONTINUE;
 	}

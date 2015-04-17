@@ -25,12 +25,12 @@ using std::map;
 using std::vector;
 
 #define CALLMOD(MOD, CLIENT, USER, NETWORK, FUNC) {  \
-	CModule *pModule = NULL;  \
+	CModule *pModule = nullptr;  \
 	if (NETWORK && (pModule = (NETWORK)->GetModules().FindModule(MOD))) {  \
 		try {  \
 			pModule->SetClient(CLIENT);  \
 			pModule->FUNC;  \
-			pModule->SetClient(NULL);  \
+			pModule->SetClient(nullptr);  \
 		} catch (const CModule::EModException& e) {  \
 			if (e == CModule::UNLOAD) {  \
 				(NETWORK)->GetModules().UnloadModule(MOD);  \
@@ -41,8 +41,8 @@ using std::vector;
 			pModule->SetClient(CLIENT);  \
 			pModule->SetNetwork(NETWORK);  \
 			pModule->FUNC;  \
-			pModule->SetClient(NULL);  \
-			pModule->SetNetwork(NULL);  \
+			pModule->SetClient(nullptr);  \
+			pModule->SetNetwork(nullptr);  \
 		} catch (const CModule::EModException& e) {  \
 			if (e == CModule::UNLOAD) {  \
 				(USER)->GetModules().UnloadModule(MOD);  \
@@ -54,9 +54,9 @@ using std::vector;
 			pModule->SetNetwork(NETWORK);  \
 			pModule->SetUser(USER);  \
 			pModule->FUNC;  \
-			pModule->SetClient(NULL);  \
-			pModule->SetNetwork(NULL);  \
-			pModule->SetUser(NULL);  \
+			pModule->SetClient(nullptr);  \
+			pModule->SetNetwork(nullptr);  \
+			pModule->SetUser(nullptr);  \
 		} catch (const CModule::EModException& e) {  \
 			if (e == CModule::UNLOAD) {  \
 					CZNC::Get().GetModules().UnloadModule(MOD);  \
@@ -72,7 +72,7 @@ CClient::~CClient() {
 		CClientAuth* pAuth = (CClientAuth*) &(*m_spAuth);
 		pAuth->Invalidate();
 	}
-	if (m_pUser != NULL) {
+	if (m_pUser != nullptr) {
 		m_pUser->AddBytesRead(GetBytesRead());
 		m_pUser->AddBytesWritten(GetBytesWritten());
 	}
@@ -205,13 +205,12 @@ void CClient::ReadLine(const CString& sData) {
 		return;                       // Don't forward this msg.  We don't want the client getting us disconnected.
 	} else if (sCommand.Equals("PROTOCTL")) {
 		VCString vsTokens;
-		VCString::const_iterator it;
 		sLine.Token(1, true).Split(" ", vsTokens, false);
 
-		for (it = vsTokens.begin(); it != vsTokens.end(); ++it) {
-			if (*it == "NAMESX") {
+		for (const CString& sToken : vsTokens) {
+			if (sToken == "NAMESX") {
 				m_bNamesx = true;
-			} else if (*it == "UHNAMES") {
+			} else if (sToken == "UHNAMES") {
 				m_bUHNames = true;
 			}
 		}
@@ -433,12 +432,11 @@ void CClient::ReadLine(const CString& sData) {
 		CString sChans = sLine.Token(1).TrimPrefix_n();
 		CString sKey = sLine.Token(2);
 
-		VCString vChans;
-		sChans.Split(",", vChans, false);
+		VCString vsChans;
+		sChans.Split(",", vsChans, false);
 		sChans.clear();
 
-		for (unsigned int a = 0; a < vChans.size(); a++) {
-			CString sChannel = vChans[a];
+		for (CString& sChannel : vsChans) {
 			bool bContinue = false;
 			NETWORKMODULECALL(OnUserJoin(sChannel, sKey), m_pUser, m_pNetwork, this, &bContinue);
 			if (bContinue) continue;
@@ -470,12 +468,11 @@ void CClient::ReadLine(const CString& sData) {
 		CString sChans = sLine.Token(1).TrimPrefix_n();
 		CString sMessage = sLine.Token(2, true).TrimPrefix_n();
 
-		VCString vChans;
-		sChans.Split(",", vChans, false);
+		VCString vsChans;
+		sChans.Split(",", vsChans, false);
 		sChans.clear();
 
-		for (VCString::const_iterator it = vChans.begin(); it != vChans.end(); ++it) {
-			CString sChan = *it;
+		for (CString& sChan : vsChans) {
 			bool bContinue = false;
 			NETWORKMODULECALL(OnUserPart(sChan, sMessage), m_pUser, m_pNetwork, this, &bContinue);
 			if (bContinue) continue;
@@ -545,9 +542,9 @@ void CClient::SetNetwork(CIRCNetwork* pNetwork, bool bDisconnect, bool bReconnec
 
 			// Tell the client they are no longer in these channels.
 			const vector<CChan*>& vChans = m_pNetwork->GetChans();
-			for (vector<CChan*>::const_iterator it = vChans.begin(); it != vChans.end(); ++it) {
-				if (!((*it)->IsDetached())) {
-					PutClient(":" + m_pNetwork->GetIRCNick().GetNickMask() + " PART " + (*it)->GetName());
+			for (const CChan* pChan : vChans) {
+				if (!(pChan->IsDetached())) {
+					PutClient(":" + m_pNetwork->GetIRCNick().GetNickMask() + " PART " + pChan->GetName());
 				}
 			}
 		} else if (m_pUser) {
@@ -579,7 +576,7 @@ const CIRCSock* CClient::GetIRCSock() const {
 		return m_pNetwork->GetIRCSock();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 CIRCSock* CClient::GetIRCSock() {
@@ -587,7 +584,7 @@ CIRCSock* CClient::GetIRCSock() {
 		return m_pNetwork->GetIRCSock();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void CClient::StatusCTCP(const CString& sLine) {
@@ -607,11 +604,11 @@ bool CClient::SendMotd() {
 		return false;
 	}
 
-	for (unsigned int a = 0; a < vsMotd.size(); a++) {
+	for (const CString& sLine : vsMotd) {
 		if (m_pNetwork) {
-			PutStatusNotice(m_pNetwork->ExpandString(vsMotd[a]));
+			PutStatusNotice(m_pNetwork->ExpandString(sLine));
 		} else {
-			PutStatusNotice(m_pUser->ExpandString(vsMotd[a]));
+			PutStatusNotice(m_pUser->ExpandString(sLine));
 		}
 	}
 
@@ -628,8 +625,7 @@ void CClient::AuthUser() {
 }
 
 CClientAuth::CClientAuth(CClient* pClient, const CString& sUsername, const CString& sPassword)
-		: CAuthBase(sUsername, sPassword, pClient) {
-	m_pClient = pClient;
+		: CAuthBase(sUsername, sPassword, pClient), m_pClient(pClient) {
 }
 
 void CClientAuth::RefusedLogin(const CString& sReason) {
@@ -645,7 +641,7 @@ CString CAuthBase::GetRemoteIP() const {
 }
 
 void CAuthBase::Invalidate() {
-	m_pSock = NULL;
+	m_pSock = nullptr;
 }
 
 void CAuthBase::AcceptLogin(CUser& User) {
@@ -740,7 +736,7 @@ void CClient::ConnectionRefused() {
 void CClient::Disconnected() {
 	DEBUG(GetSockName() << " == Disconnected()");
 	CIRCNetwork* pNetwork = m_pNetwork;
-	SetNetwork(NULL, true, false);
+	SetNetwork(nullptr, true, false);
 
 	if (m_pUser) {
 		NETWORKMODULECALL(OnClientDisconnect(), m_pUser, pNetwork, this, NOTHING);
@@ -812,17 +808,16 @@ void CClient::PutModNotice(const CString& sModule, const CString& sLine) {
 }
 
 void CClient::PutModule(const CString& sModule, const CString& sLine) {
-	VCString vsLines;
-	VCString::iterator it;
 	if (!m_pUser) {
 		return;
 	}
 
 	DEBUG("(" << GetFullName() << ") ZNC -> CLI [:" + m_pUser->GetStatusPrefix() + ((sModule.empty()) ? "status" : sModule) + "!znc@znc.in PRIVMSG " << GetNick() << " :" << sLine << "]");
 
+	VCString vsLines;
 	sLine.Split("\n", vsLines);
-	for (it = vsLines.begin(); it != vsLines.end(); ++it) {
-		Write(":" + m_pUser->GetStatusPrefix() + ((sModule.empty()) ? "status" : sModule) + "!znc@znc.in PRIVMSG " + GetNick() + " :" + (*it) + "\r\n");
+	for (const CString& s : vsLines) {
+		Write(":" + m_pUser->GetStatusPrefix() + ((sModule.empty()) ? "status" : sModule) + "!znc@znc.in PRIVMSG " + GetNick() + " :" + s + "\r\n");
 	}
 }
 
@@ -882,11 +877,13 @@ void CClient::HandleCap(const CString& sLine)
 	if (sSubCmd.Equals("LS")) {
 		SCString ssOfferCaps;
 		GLOBALMODULECALL(OnClientCapLs(this, ssOfferCaps), NOTHING);
-		CString sRes;
-		for (SCString::iterator i = ssOfferCaps.begin(); i != ssOfferCaps.end(); ++i) {
-			sRes += *i + " ";
-		}
-		RespondCap("LS :" + sRes + "userhost-in-names multi-prefix znc.in/server-time-iso znc.in/batch znc.in/self-message");
+		ssOfferCaps.insert("userhost-in-names");
+		ssOfferCaps.insert("multi-prefix");
+		ssOfferCaps.insert("znc.in/server-time-iso");
+		ssOfferCaps.insert("znc.in/batch");
+		ssOfferCaps.insert("znc.in/self-message");
+		CString sRes = CString(" ").Join(ssOfferCaps.begin(), ssOfferCaps.end());
+		RespondCap("LS :" + sRes);
 		m_bInCap = true;
 	} else if (sSubCmd.Equals("END")) {
 		m_bInCap = false;
@@ -899,12 +896,11 @@ void CClient::HandleCap(const CString& sLine)
 		}
 	} else if (sSubCmd.Equals("REQ")) {
 		VCString vsTokens;
-		VCString::iterator it;
 		sLine.Token(2, true).TrimPrefix_n(":").Split(" ", vsTokens, false);
 
-		for (it = vsTokens.begin(); it != vsTokens.end(); ++it) {
+		for (const CString& sToken : vsTokens) {
 			bool bVal = true;
-			CString sCap = *it;
+			CString sCap = sToken;
 			if (sCap.TrimPrefix("-"))
 				bVal = false;
 
@@ -919,46 +915,44 @@ void CClient::HandleCap(const CString& sLine)
 		}
 
 		// All is fine, we support what was requested
-		for (it = vsTokens.begin(); it != vsTokens.end(); ++it) {
+		for (const CString& sToken : vsTokens) {
 			bool bVal = true;
-			if (it->TrimPrefix("-"))
+			CString sCap = sToken;
+			if (sCap.TrimPrefix("-"))
 				bVal = false;
 
-			if ("multi-prefix" == *it) {
+			if ("multi-prefix" == sCap) {
 				m_bNamesx = bVal;
-			} else if ("userhost-in-names" == *it) {
+			} else if ("userhost-in-names" == sCap) {
 				m_bUHNames = bVal;
-			} else if ("znc.in/server-time-iso" == *it) {
+			} else if ("znc.in/server-time-iso" == sCap) {
 				m_bServerTime = bVal;
-			} else if ("znc.in/batch" == *it) {
+			} else if ("znc.in/batch" == sCap) {
 				m_bBatch = bVal;
-			} else if ("znc.in/self-message" == *it) {
+			} else if ("znc.in/self-message" == sCap) {
 				m_bSelfMessage = bVal;
 			}
-			GLOBALMODULECALL(OnClientCapRequest(this, *it, bVal), NOTHING);
+			GLOBALMODULECALL(OnClientCapRequest(this, sCap, bVal), NOTHING);
 
 			if (bVal) {
-				m_ssAcceptedCaps.insert(*it);
+				m_ssAcceptedCaps.insert(sCap);
 			} else {
-				m_ssAcceptedCaps.erase(*it);
+				m_ssAcceptedCaps.erase(sCap);
 			}
 		}
 
 		RespondCap("ACK :" + sLine.Token(2, true).TrimPrefix_n(":"));
 	} else if (sSubCmd.Equals("LIST")) {
-		CString sList = "";
-		for (SCString::iterator i = m_ssAcceptedCaps.begin(); i != m_ssAcceptedCaps.end(); ++i) {
-			sList += *i + " ";
-		}
-		RespondCap("LIST :" + sList.TrimSuffix_n(" "));
+		CString sList = CString(" ").Join(m_ssAcceptedCaps.begin(), m_ssAcceptedCaps.end());
+		RespondCap("LIST :" + sList);
 	} else if (sSubCmd.Equals("CLEAR")) {
 		SCString ssRemoved;
-		for (SCString::iterator i = m_ssAcceptedCaps.begin(); i != m_ssAcceptedCaps.end(); ++i) {
+		for (const CString& sCap : m_ssAcceptedCaps) {
 			bool bRemoving = false;
-			GLOBALMODULECALL(IsClientCapSupported(this, *i, false), &bRemoving);
+			GLOBALMODULECALL(IsClientCapSupported(this, sCap, false), &bRemoving);
 			if (bRemoving) {
-				GLOBALMODULECALL(OnClientCapRequest(this, *i, false), NOTHING);
-				ssRemoved.insert(*i);
+				GLOBALMODULECALL(OnClientCapRequest(this, sCap, false), NOTHING);
+				ssRemoved.insert(sCap);
 			}
 		}
 		if (m_bNamesx) {
@@ -982,9 +976,9 @@ void CClient::HandleCap(const CString& sLine)
 			ssRemoved.insert("znc.in/self-message");
 		}
 		CString sList = "";
-		for (SCString::iterator i = ssRemoved.begin(); i != ssRemoved.end(); ++i) {
-			m_ssAcceptedCaps.erase(*i);
-			sList += "-" + *i + " ";
+		for (const CString& sCap : ssRemoved) {
+			m_ssAcceptedCaps.erase(sCap);
+			sList += "-" + sCap + " ";
 		}
 		RespondCap("ACK :" + sList.TrimSuffix_n(" "));
 	} else {

@@ -17,10 +17,8 @@
 #include <znc/znc.h>
 #include <znc/User.h>
 
-CBufLine::CBufLine(const CString& sFormat, const CString& sText, const timeval* ts) {
-	m_sFormat = sFormat;
-	m_sText = sText;
-	if (ts == NULL)
+CBufLine::CBufLine(const CString& sFormat, const CString& sText, const timeval* ts) : m_sFormat(sFormat), m_sText(sText), m_time() {
+	if (ts == nullptr)
 		UpdateTime();
 	else
 		m_time = *ts;
@@ -29,10 +27,10 @@ CBufLine::CBufLine(const CString& sFormat, const CString& sText, const timeval* 
 CBufLine::~CBufLine() {}
 
 void CBufLine::UpdateTime() {
-	if (0 == gettimeofday(&m_time, NULL)) {
+	if (0 == gettimeofday(&m_time, nullptr)) {
 		return;
 	}
-	m_time.tv_sec = time(NULL);
+	m_time.tv_sec = time(nullptr);
 	m_time.tv_usec = 0;
 }
 
@@ -49,8 +47,7 @@ CString CBufLine::GetLine(const CClient& Client, const MCString& msParams) const
 	}
 }
 
-CBuffer::CBuffer(unsigned int uLineCount) {
-	m_uLineCount = uLineCount;
+CBuffer::CBuffer(unsigned int uLineCount) : m_uLineCount(uLineCount) {
 }
 
 CBuffer::~CBuffer() {}
@@ -69,11 +66,11 @@ CBuffer::size_type CBuffer::AddLine(const CString& sFormat, const CString& sText
 }
 
 CBuffer::size_type CBuffer::UpdateLine(const CString& sMatch, const CString& sFormat, const CString& sText) {
-	for (iterator it = begin(); it != end(); ++it) {
-		if (it->GetFormat().compare(0, sMatch.length(), sMatch) == 0) {
-			it->SetFormat(sFormat);
-			it->SetText(sText);
-			it->UpdateTime();
+	for (CBufLine& Line : *this) {
+		if (Line.GetFormat().compare(0, sMatch.length(), sMatch) == 0) {
+			Line.SetFormat(sFormat);
+			Line.SetText(sText);
+			Line.UpdateTime();
 			return size();
 		}
 	}
@@ -82,8 +79,8 @@ CBuffer::size_type CBuffer::UpdateLine(const CString& sMatch, const CString& sFo
 }
 
 CBuffer::size_type CBuffer::UpdateExactLine(const CString& sFormat, const CString& sText) {
-	for (iterator it = begin(); it != end(); ++it) {
-		if (it->GetFormat() == sFormat && it->GetText() == sText) {
+	for (const CBufLine& Line : *this) {
+		if (Line.GetFormat() == sFormat && Line.GetText() == sText) {
 			return size();
 		}
 	}

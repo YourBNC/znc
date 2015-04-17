@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef EXEC_SOCK_H
-#define EXEC_SOCK_H
+#ifndef ZNC_EXECSOCK_H
+#define ZNC_EXECSOCK_H
 
 #include <znc/zncconfig.h>
 #include <znc/Socket.h>
@@ -24,9 +24,7 @@
 //! @author imaginos@imaginos.net
 class CExecSock : public CZNCSock {
 public:
-	CExecSock() : CZNCSock(0) {
-		m_iPid = -1;
-	}
+	CExecSock() : CZNCSock(0), m_iPid(-1) {}
 
 	int Execute(const CString & sExec) {
 		int iReadFD, iWriteFD;
@@ -54,4 +52,4 @@ private:
 	int  m_iPid;
 };
 
-#endif // !EXEC_SOCK_H
+#endif // !ZNC_EXECSOCK_H

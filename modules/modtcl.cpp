@@ -30,7 +30,7 @@ using std::map;
 #define BADARGS(nl, nh, example) do {                               \
 	if ((argc < (nl)) || (argc > (nh))) {                       \
 		Tcl_AppendResult(irp, "wrong # args: should be \"", \
-			argv[0], (example), "\"", NULL);            \
+			argv[0], (example), "\"", nullptr);            \
 		return TCL_ERROR;                                   \
 	}                                                           \
 } while (0)
@@ -40,20 +40,20 @@ class CModTcl;
 class CModTclTimer : public CTimer {
 public:
 
-	CModTclTimer(CModule* pModule, unsigned int uInterval, unsigned int uCycles, const CString& sLabel, const CString& sDescription) : CTimer(pModule, uInterval, uCycles, sLabel, sDescription), m_pParent(NULL) {}
+	CModTclTimer(CModule* pModule, unsigned int uInterval, unsigned int uCycles, const CString& sLabel, const CString& sDescription) : CTimer(pModule, uInterval, uCycles, sLabel, sDescription), m_pParent(nullptr) {}
 	virtual ~CModTclTimer() {}
 protected:
-	virtual void RunJob() override;
+	void RunJob() override;
 	CModTcl* m_pParent;
 };
 
 class CModTclStartTimer : public CTimer {
 public:
 
-	CModTclStartTimer(CModule* pModule, unsigned int uInterval, unsigned int uCycles, const CString& sLabel, const CString& sDescription) : CTimer(pModule, uInterval, uCycles, sLabel, sDescription), m_pParent(NULL) {}
+	CModTclStartTimer(CModule* pModule, unsigned int uInterval, unsigned int uCycles, const CString& sLabel, const CString& sDescription) : CTimer(pModule, uInterval, uCycles, sLabel, sDescription), m_pParent(nullptr) {}
 	virtual ~CModTclStartTimer() {}
 protected:
-	virtual void RunJob() override;
+	void RunJob() override;
 	CModTcl* m_pParent;
 };
 
@@ -61,7 +61,7 @@ protected:
 class CModTcl : public CModule {
 public:
 	MODCONSTRUCTOR(CModTcl) {
-		interp = NULL;
+		interp = nullptr;
 	}
 
 	virtual ~CModTcl() {
@@ -70,7 +70,7 @@ public:
 		}
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sErrorMsg) override {
+	bool OnLoad(const CString& sArgs, CString& sErrorMsg) override {
 #ifndef MOD_MODTCL_ALLOW_EVERYONE
 		if (!GetUser()->IsAdmin()) {
 			sErrorMsg = "You must be admin to use the modtcl module";
@@ -87,32 +87,32 @@ public:
 
 		interp = Tcl_CreateInterp();
 		Tcl_Init(interp);
-		Tcl_CreateCommand(interp, "Binds::ProcessPubm", tcl_Bind, this, NULL);
-		Tcl_CreateCommand(interp, "Binds::ProcessMsgm", tcl_Bind, this, NULL);
-		Tcl_CreateCommand(interp, "Binds::ProcessTime", tcl_Bind, this, NULL);
-		Tcl_CreateCommand(interp, "Binds::ProcessEvnt", tcl_Bind, this, NULL);
-		Tcl_CreateCommand(interp, "Binds::ProcessNick", tcl_Bind, this, NULL);
-		Tcl_CreateCommand(interp, "Binds::ProcessKick", tcl_Bind, this, NULL);
-		Tcl_CreateCommand(interp, "PutIRC", tcl_PutIRC, this, NULL);
-		Tcl_CreateCommand(interp, "PutModule", tcl_PutModule, this, NULL);
-		Tcl_CreateCommand(interp, "PutStatus", tcl_PutStatus, this, NULL);
-		Tcl_CreateCommand(interp, "PutStatusNotice", tcl_PutStatusNotice, this, NULL);
-		Tcl_CreateCommand(interp, "PutUser", tcl_PutUser, this, NULL);
+		Tcl_CreateCommand(interp, "Binds::ProcessPubm", tcl_Bind, this, nullptr);
+		Tcl_CreateCommand(interp, "Binds::ProcessMsgm", tcl_Bind, this, nullptr);
+		Tcl_CreateCommand(interp, "Binds::ProcessTime", tcl_Bind, this, nullptr);
+		Tcl_CreateCommand(interp, "Binds::ProcessEvnt", tcl_Bind, this, nullptr);
+		Tcl_CreateCommand(interp, "Binds::ProcessNick", tcl_Bind, this, nullptr);
+		Tcl_CreateCommand(interp, "Binds::ProcessKick", tcl_Bind, this, nullptr);
+		Tcl_CreateCommand(interp, "PutIRC", tcl_PutIRC, this, nullptr);
+		Tcl_CreateCommand(interp, "PutModule", tcl_PutModule, this, nullptr);
+		Tcl_CreateCommand(interp, "PutStatus", tcl_PutStatus, this, nullptr);
+		Tcl_CreateCommand(interp, "PutStatusNotice", tcl_PutStatusNotice, this, nullptr);
+		Tcl_CreateCommand(interp, "PutUser", tcl_PutUser, this, nullptr);
 
-		Tcl_CreateCommand(interp, "GetCurNick", tcl_GetCurNick, this, NULL);
-		Tcl_CreateCommand(interp, "GetUsername", tcl_GetUsername, this, NULL);
-		Tcl_CreateCommand(interp, "GetRealName", tcl_GetRealName, this, NULL);
-		Tcl_CreateCommand(interp, "GetVHost", tcl_GetBindHost, this, NULL);
-		Tcl_CreateCommand(interp, "GetBindHost", tcl_GetBindHost, this, NULL);
-		Tcl_CreateCommand(interp, "GetChans", tcl_GetChans, this, NULL);
-		Tcl_CreateCommand(interp, "GetChannelUsers", tcl_GetChannelUsers, this, NULL);
-		Tcl_CreateCommand(interp, "GetChannelModes", tcl_GetChannelModes, this, NULL);
-		Tcl_CreateCommand(interp, "GetServer", tcl_GetServer, this, NULL);
-		Tcl_CreateCommand(interp, "GetServerOnline", tcl_GetServerOnline, this, NULL);
-		Tcl_CreateCommand(interp, "GetModules", tcl_GetModules, this, NULL);
-		Tcl_CreateCommand(interp, "GetClientCount", tcl_GetClientCount, this, NULL);
+		Tcl_CreateCommand(interp, "GetCurNick", tcl_GetCurNick, this, nullptr);
+		Tcl_CreateCommand(interp, "GetUsername", tcl_GetUsername, this, nullptr);
+		Tcl_CreateCommand(interp, "GetRealName", tcl_GetRealName, this, nullptr);
+		Tcl_CreateCommand(interp, "GetVHost", tcl_GetBindHost, this, nullptr);
+		Tcl_CreateCommand(interp, "GetBindHost", tcl_GetBindHost, this, nullptr);
+		Tcl_CreateCommand(interp, "GetChans", tcl_GetChans, this, nullptr);
+		Tcl_CreateCommand(interp, "GetChannelUsers", tcl_GetChannelUsers, this, nullptr);
+		Tcl_CreateCommand(interp, "GetChannelModes", tcl_GetChannelModes, this, nullptr);
+		Tcl_CreateCommand(interp, "GetServer", tcl_GetServer, this, nullptr);
+		Tcl_CreateCommand(interp, "GetServerOnline", tcl_GetServerOnline, this, nullptr);
+		Tcl_CreateCommand(interp, "GetModules", tcl_GetModules, this, nullptr);
+		Tcl_CreateCommand(interp, "GetClientCount", tcl_GetClientCount, this, nullptr);
 
-		Tcl_CreateCommand(interp, "exit", tcl_exit, this, NULL);
+		Tcl_CreateCommand(interp, "exit", tcl_exit, this, nullptr);
 
 		if (!sMyArgs.empty()) {
 			i = Tcl_EvalFile(interp, sMyArgs.c_str());
@@ -124,7 +124,7 @@ public:
 		AddTimer(new CModTclTimer(this, 1, 0, "ModTclUpdate", "Timer for modtcl to process pending events and idle callbacks."));
 	}
 
-	virtual void OnModCommand(const CString& sCommand) override {
+	void OnModCommand(const CString& sCommand) override {
 		CString sResult;
 		VCString vsResult;
 		CString sCmd = sCommand;
@@ -161,29 +161,29 @@ public:
 		return sLine;
 	}
 
-	virtual void OnPreRehash() override {
+	void OnPreRehash() override {
 		if (interp)
 			Tcl_Eval(interp,"Binds::ProcessEvnt prerehash");
 	}
 
-	virtual void OnPostRehash() override {
+	void OnPostRehash() override {
 		if (interp) {
 			Tcl_Eval(interp,"rehash");
 			Tcl_Eval(interp,"Binds::ProcessEvnt rehash");
 		}
 	}
 
-	virtual void OnIRCConnected() override {
+	void OnIRCConnected() override {
 		if (interp)
 			Tcl_Eval(interp, "Binds::ProcessEvnt init-server");
 	}
 
-	virtual void OnIRCDisconnected() override {
+	void OnIRCDisconnected() override {
 		if (interp)
 			Tcl_Eval(interp, "Binds::ProcessEvnt disconnect-server");
 	}
 
-	virtual EModRet OnChanMsg(CNick& Nick, CChan& Channel, CString& sMessage) override {
+	EModRet OnChanMsg(CNick& Nick, CChan& Channel, CString& sMessage) override {
 		CString sMes = TclEscape(sMessage);
 		CString sNick = TclEscape(CString(Nick.GetNick()));
 		CString sHost = TclEscape(CString(Nick.GetIdent() + "@" + Nick.GetHost()));
@@ -197,7 +197,7 @@ public:
 		return CONTINUE;
 	}
 
-	virtual EModRet OnPrivMsg(CNick& Nick, CString& sMessage) override {
+	EModRet OnPrivMsg(CNick& Nick, CString& sMessage) override {
 		CString sMes = TclEscape(sMessage);
 		CString sNick = TclEscape(CString(Nick.GetNick()));
 		CString sHost = TclEscape(CString(Nick.GetIdent() + "@" + Nick.GetHost()));
@@ -210,7 +210,7 @@ public:
 		return CONTINUE;
 	}
 
-	virtual void OnNick(const CNick& OldNick, const CString& sNewNick, const vector<CChan*>& vChans) override {
+	void OnNick(const CNick& OldNick, const CString& sNewNick, const vector<CChan*>& vChans) override {
 		CString sOldNick = TclEscape(CString(OldNick.GetNick()));
 		CString sNewNickTmp = TclEscape(sNewNick);
 		CString sHost = TclEscape(CString(OldNick.GetIdent() + "@" + OldNick.GetHost()));
@@ -227,7 +227,7 @@ public:
 		}
 	}
 
-	virtual void OnKick(const CNick& OpNick, const CString& sKickedNick, CChan& Channel, const CString& sMessage) override {
+	void OnKick(const CNick& OpNick, const CString& sKickedNick, CChan& Channel, const CString& sMessage) override {
 		CString sOpNick = TclEscape(CString(OpNick.GetNick()));
 		CString sNick = TclEscape(sKickedNick);
 		CString sOpHost = TclEscape(CString(OpNick.GetIdent() + "@" + OpNick.GetHost()));

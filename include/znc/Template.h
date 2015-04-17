@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _TEMPLATE_H
-#define _TEMPLATE_H
+#ifndef ZNC_TEMPLATE_H
+#define ZNC_TEMPLATE_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -51,9 +51,7 @@ class CTemplate;
 
 class CTemplateOptions {
 public:
-	CTemplateOptions() {
-		m_eEscapeFrom = CString::EASCII;
-		m_eEscapeTo = CString::EASCII;
+	CTemplateOptions() : m_eEscapeFrom(CString::EASCII), m_eEscapeTo(CString::EASCII) {
 	}
 
 	virtual ~CTemplateOptions() {}
@@ -72,16 +70,14 @@ private:
 
 class CTemplateLoopContext {
 public:
-	CTemplateLoopContext(unsigned long uFilePos, const CString& sLoopName, bool bReverse, std::vector<CTemplate*>* pRows) {
-		m_uFilePosition = uFilePos;
-		m_sName = sLoopName;
-		m_uRowIndex = 0;
-		m_bReverse = bReverse;
-		m_pvRows = pRows;
-		m_bHasData = false;
+	CTemplateLoopContext(unsigned long uFilePos, const CString& sLoopName, bool bReverse, std::vector<CTemplate*>* pRows)
+			: m_bReverse(bReverse), m_bHasData(false), m_sName(sLoopName), m_uRowIndex(0), m_uFilePosition(uFilePos), m_pvRows(pRows) {
 	}
 
 	virtual ~CTemplateLoopContext() {}
+
+	CTemplateLoopContext(const CTemplateLoopContext&) = default;
+	CTemplateLoopContext& operator=(const CTemplateLoopContext&) = default;
 
 	// Setters
 	void SetHasData(bool b = true) { m_bHasData = b; }
@@ -117,20 +113,19 @@ private:
 
 class CTemplate : public MCString {
 public:
-	CTemplate() : MCString(), m_spOptions(new CTemplateOptions) {
-		Init();
+	CTemplate() : CTemplate("") {
 	}
 
-	CTemplate(const CString& sFileName) : MCString(), m_sFileName(sFileName), m_spOptions(new CTemplateOptions) {
-		Init();
+	CTemplate(const CString& sFileName) : MCString(), m_pParent(nullptr), m_sFileName(sFileName), m_lsbPaths(), m_mvLoops(), m_vLoopContexts(), m_spOptions(new CTemplateOptions), m_vspTagHandlers() {
 	}
 
-	CTemplate(const std::shared_ptr<CTemplateOptions>& Options, CTemplate* pParent = NULL) : MCString(), m_spOptions(Options) {
-		Init();
-		m_pParent = pParent;
+	CTemplate(const std::shared_ptr<CTemplateOptions>& Options, CTemplate* pParent = nullptr) : MCString(), m_pParent(pParent), m_sFileName(""), m_lsbPaths(), m_mvLoops(), m_vLoopContexts(), m_spOptions(Options), m_vspTagHandlers() {
 	}
 
 	virtual ~CTemplate();
+
+	CTemplate(const CTemplate& other) = default;
+	CTemplate& operator=(const CTemplate& other) = default;
 
 	//! Class for implementing custom tags in subclasses
 	void AddTagHandler(std::shared_ptr<CTemplateTagHandler> spTagHandler) {
@@ -187,4 +182,4 @@ private:
 	std::vector<std::shared_ptr<CTemplateTagHandler> >  m_vspTagHandlers;
 };
 
-#endif // !_TEMPLATE_H
+#endif // !ZNC_TEMPLATE_H

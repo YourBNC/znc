@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _CLIENT_H
-#define _CLIENT_H
+#ifndef ZNC_CLIENT_H
+#define ZNC_CLIENT_H
 
 #include <znc/zncconfig.h>
 #include <znc/Socket.h>
@@ -33,11 +33,13 @@ class CClient;
 
 class CAuthBase {
 public:
-	CAuthBase(const CString& sUsername, const CString& sPassword, CZNCSock* pSock) {
-		SetLoginInfo(sUsername, sPassword, pSock);
+	CAuthBase(const CString& sUsername, const CString& sPassword, CZNCSock* pSock) : m_sUsername(sUsername), m_sPassword(sPassword), m_pSock(pSock) {
 	}
 
 	virtual ~CAuthBase() {}
+
+	CAuthBase(const CAuthBase&) = delete;
+	CAuthBase& operator=(const CAuthBase&) = delete;
 
 	virtual void SetLoginInfo(const CString& sUsername, const CString& sPassword,
 			CZNCSock* pSock) {
@@ -74,9 +76,12 @@ public:
 	CClientAuth(CClient* pClient, const CString& sUsername, const CString& sPassword);
 	virtual ~CClientAuth() {}
 
-	void Invalidate() { m_pClient = NULL; CAuthBase::Invalidate(); }
-	void AcceptedLogin(CUser& User);
-	void RefusedLogin(const CString& sReason);
+	CClientAuth(const CClientAuth&) = delete;
+	CClientAuth& operator=(const CClientAuth&) = delete;
+
+	void Invalidate() override { m_pClient = nullptr; CAuthBase::Invalidate(); }
+	void AcceptedLogin(CUser& User) override;
+	void RefusedLogin(const CString& sReason) override;
 private:
 protected:
 	CClient* m_pClient;
@@ -84,29 +89,39 @@ protected:
 
 class CClient : public CIRCSocket {
 public:
-	CClient() : CIRCSocket() {
-		m_pUser = NULL;
-		m_pNetwork = NULL;
-		m_bGotPass = false;
-		m_bGotNick = false;
-		m_bGotUser = false;
-		m_bInCap = false;
-		m_bNamesx = false;
-		m_bUHNames = false;
-		m_bAway = false;
-		m_bServerTime = false;
-		m_bBatch = false;
-		m_bSelfMessage = false;
-		m_bPlaybackActive = false;
+	CClient()
+			: CIRCSocket(),
+			  m_bGotPass(false),
+			  m_bGotNick(false),
+			  m_bGotUser(false),
+			  m_bInCap(false),
+			  m_bNamesx(false),
+			  m_bUHNames(false),
+			  m_bAway(false),
+			  m_bServerTime(false),
+			  m_bBatch(false),
+			  m_bSelfMessage(false),
+			  m_bPlaybackActive(false),
+			  m_pUser(nullptr),
+			  m_pNetwork(nullptr),
+			  m_sNick("unknown-nick"),
+			  m_sPass(""),
+			  m_sUser(""),
+			  m_sNetwork(""),
+			  m_sIdentifier(""),
+			  m_spAuth(),
+			  m_ssAcceptedCaps()
+	{
 		EnableReadLine();
 		// RFC says a line can have 512 chars max, but we are
 		// a little more gentle ;)
 		SetMaxBufferThreshold(1024);
-
-		SetNick("unknown-nick");
 	}
 
 	virtual ~CClient();
+
+	CClient(const CClient&) = delete;
+	CClient& operator=(const CClient&) = delete;
 
 	void SendRequiredPasswordNotice();
 	void AcceptLogin(CUser& User);
@@ -128,7 +143,7 @@ public:
 	void UserPortCommand(CString& sLine);
 	void StatusCTCP(const CString& sCommand);
 	void BouncedOff();
-	bool IsAttached() const { return m_pUser != NULL; }
+	bool IsAttached() const { return m_pUser != nullptr; }
 
 	bool IsPlaybackActive() const { return m_bPlaybackActive; }
 	void SetPlaybackActive(bool bActive) { m_bPlaybackActive = bActive; }
@@ -143,15 +158,15 @@ public:
 
 	bool IsCapEnabled(const CString& sCap) const { return 1 == m_ssAcceptedCaps.count(sCap); }
 
-	virtual void ReadLine(const CString& sData);
+	void ReadLine(const CString& sData) override;
 	bool SendMotd();
 	void HelpUser(const CString& sFilter = "");
 	void AuthUser();
-	virtual void Connected();
-	virtual void Timeout();
-	virtual void Disconnected();
-	virtual void ConnectionRefused();
-	virtual void ReachedMaxBuffer();
+	void Connected() override;
+	void Timeout() override;
+	void Disconnected() override;
+	void ConnectionRefused() override;
+	void ReachedMaxBuffer() override;
 
 	void SetNick(const CString& s);
 	void SetAway(bool bAway) { m_bAway = bAway; }
@@ -194,4 +209,4 @@ protected:
 	friend class ClientTest;
 };
 
-#endif // !_CLIENT_H
+#endif // !ZNC_CLIENT_H

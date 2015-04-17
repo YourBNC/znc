@@ -85,7 +85,7 @@ public:
 	virtual ~CWebAdminMod() {
 	}
 
-	virtual bool OnLoad(const CString& sArgStr, CString& sMessage) override {
+	bool OnLoad(const CString& sArgStr, CString& sMessage) override {
 		if (sArgStr.empty() || CModInfo::GlobalModule != GetType())
 			return true;
 
@@ -173,7 +173,7 @@ public:
 
 		if (sUsername.empty()) {
 			WebSock.PrintErrorPage("Invalid Submission [Username is required]");
-			return NULL;
+			return nullptr;
 		}
 
 		if (pUser) {
@@ -185,7 +185,7 @@ public:
 
 		if (sArg != WebSock.GetParam("password2")) {
 			WebSock.PrintErrorPage("Invalid Submission [Passwords do not match]");
-			return NULL;
+			return nullptr;
 		}
 
 		CUser* pNewUser = new CUser(sUsername);
@@ -343,7 +343,7 @@ public:
 					CString sArgs = WebSock.GetParam("modargs_" + sModName);
 
 					try {
-						if (!pNewUser->GetModules().LoadModule(sModName, sArgs, CModInfo::UserModule, pNewUser, NULL, sModRet)) {
+						if (!pNewUser->GetModules().LoadModule(sModName, sArgs, CModInfo::UserModule, pNewUser, nullptr, sModRet)) {
 							sModLoadError = "Unable to load module [" + sModName + "] [" + sModRet + "]";
 						}
 					} catch (...) {
@@ -366,7 +366,7 @@ public:
 				CString sModLoadError;
 
 				try {
-					if (!pNewUser->GetModules().LoadModule(sModName, sArgs, CModInfo::UserModule, pNewUser, NULL, sModRet)) {
+					if (!pNewUser->GetModules().LoadModule(sModName, sArgs, CModInfo::UserModule, pNewUser, nullptr, sModRet)) {
 						sModLoadError = "Unable to load module [" + sModName + "] [" + sModRet + "]";
 					}
 				} catch (...) {
@@ -409,7 +409,7 @@ public:
 
 	CIRCNetwork* SafeGetNetworkFromParam(CWebSock& WebSock) {
 		CUser* pUser = CZNC::Get().FindUser(SafeGetUserNameParam(WebSock));
-		CIRCNetwork* pNetwork = NULL;
+		CIRCNetwork* pNetwork = nullptr;
 
 		if (pUser) {
 			pNetwork = pUser->FindNetwork(SafeGetNetworkParam(WebSock));
@@ -418,8 +418,8 @@ public:
 		return pNetwork;
 	}
 
-	virtual CString GetWebMenuTitle() override { return "webadmin"; }
-	virtual bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
+	CString GetWebMenuTitle() override { return "webadmin"; }
+	bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
 		std::shared_ptr<CWebSession> spSession = WebSock.GetSession();
 
 		if (sPageName == "settings") {
@@ -614,7 +614,7 @@ public:
 		return false;
 	}
 
-	bool ChanPage(CWebSock& WebSock, CTemplate& Tmpl, CIRCNetwork* pNetwork, CChan* pChan = NULL) {
+	bool ChanPage(CWebSock& WebSock, CTemplate& Tmpl, CIRCNetwork* pNetwork, CChan* pChan = nullptr) {
 		std::shared_ptr<CWebSession> spSession = WebSock.GetSession();
 		Tmpl.SetFile("add_edit_chan.tmpl");
 		CUser* pUser = pNetwork->GetUser();
@@ -628,6 +628,14 @@ public:
 			Tmpl["User"] = pUser->GetUserName();
 			Tmpl["Network"] = pNetwork->GetName();
 
+			CTemplate& breadUser = Tmpl.AddRow("BreadCrumbs");
+			breadUser["Text"] = "Edit User [" + pUser->GetUserName() + "]";
+			breadUser["URL"] = GetWebPath() + "edituser?user=" + pUser->GetUserName();
+			CTemplate& breadNet = Tmpl.AddRow("BreadCrumbs");
+			breadNet["Text"] = "Edit Network [" + pNetwork->GetName() + "]";
+			breadNet["URL"] = GetWebPath() + "editnetwork?user=" + pUser->GetUserName() + "&network=" + pNetwork->GetName();
+			CTemplate& breadChan = Tmpl.AddRow("BreadCrumbs");
+
 			if (pChan) {
 				Tmpl["Action"] = "editchan";
 				Tmpl["Edit"] = "true";
@@ -636,6 +644,7 @@ public:
 				Tmpl["BufferCount"] = CString(pChan->GetBufferCount());
 				Tmpl["DefModes"] = pChan->GetDefaultModes();
 				Tmpl["Key"] = pChan->GetKey();
+				breadChan["Text"] = "Edit Channel [" + pChan->GetName() + "]";
 
 				if (pChan->InConfig()) {
 					Tmpl["InConfig"] = "true";
@@ -646,6 +655,7 @@ public:
 				Tmpl["BufferCount"] = CString(pUser->GetBufferCount());
 				Tmpl["DefModes"] = CString(pUser->GetDefaultChanModes());
 				Tmpl["InConfig"] = "true";
+				breadChan["Text"] = "Add Channel";
 			}
 
 			// o1 used to be AutoCycle which was removed
@@ -760,7 +770,7 @@ public:
 		return true;
 	}
 
-	bool NetworkPage(CWebSock& WebSock, CTemplate& Tmpl, CUser* pUser, CIRCNetwork* pNetwork = NULL) {
+	bool NetworkPage(CWebSock& WebSock, CTemplate& Tmpl, CUser* pUser, CIRCNetwork* pNetwork = nullptr) {
 		std::shared_ptr<CWebSession> spSession = WebSock.GetSession();
 		Tmpl.SetFile("add_edit_network.tmpl");
 
@@ -789,11 +799,11 @@ public:
 
 				// Check if module is loaded globally
 				l["CanBeLoadedGlobally"] = CString(Info.SupportsType(CModInfo::GlobalModule));
-				l["LoadedGlobally"] = CString(CZNC::Get().GetModules().FindModule(Info.GetName()) != NULL);
+				l["LoadedGlobally"] = CString(CZNC::Get().GetModules().FindModule(Info.GetName()) != nullptr);
 
 				// Check if module is loaded by user
 				l["CanBeLoadedByUser"] = CString(Info.SupportsType(CModInfo::UserModule));
-				l["LoadedByUser"] = CString(pUser->GetModules().FindModule(Info.GetName()) != NULL);
+				l["LoadedByUser"] = CString(pUser->GetModules().FindModule(Info.GetName()) != nullptr);
 
 				if (!spSession->IsAdmin() && pUser->DenyLoadMod()) {
 					l["Disabled"] = "true";
@@ -832,6 +842,11 @@ public:
 				}
 			}
 
+			CTemplate& breadUser = Tmpl.AddRow("BreadCrumbs");
+			breadUser["Text"] = "Edit User [" + pUser->GetUserName() + "]";
+			breadUser["URL"] = GetWebPath() + "edituser?user=" + pUser->GetUserName();
+			CTemplate& breadNet = Tmpl.AddRow("BreadCrumbs");
+
 			if (pNetwork) {
 				Tmpl["Action"] = "editnetwork";
 				Tmpl["Edit"] = "true";
@@ -853,6 +868,8 @@ public:
 				Tmpl["JoinDelay"] = CString(pNetwork->GetJoinDelay());
 
 				Tmpl["IRCConnectEnabled"] = CString(pNetwork->GetIRCConnectEnabled());
+
+				breadNet["Text"] = "Edit Network [" + pNetwork->GetName() + "]";
 
 				const vector<CServer*>& vServers = pNetwork->GetServers();
 				for (unsigned int a = 0; a < vServers.size(); a++) {
@@ -900,6 +917,7 @@ public:
 				Tmpl["FloodRate"] = "1.0";
 				Tmpl["FloodBurst"] = "4";
 				Tmpl["JoinDelay"] = "0";
+				breadNet["Text"] = "Add Network";
 			}
 
 			FOR_EACH_MODULE(i, make_pair(pUser, pNetwork)) {
@@ -1181,7 +1199,7 @@ public:
 		return false;
 	}
 
-	bool UserPage(CWebSock& WebSock, CTemplate& Tmpl, CUser* pUser = NULL) {
+	bool UserPage(CWebSock& WebSock, CTemplate& Tmpl, CUser* pUser = nullptr) {
 		std::shared_ptr<CWebSession> spSession = WebSock.GetSession();
 		Tmpl.SetFile("add_edit_user.tmpl");
 
@@ -1352,7 +1370,7 @@ public:
 				l["HasArgs"] = CString(Info.GetHasArgs());
 				l["ArgsHelpText"] = Info.GetArgsHelpText();
 
-				CModule *pModule = NULL;
+				CModule *pModule = nullptr;
 				if (pUser) {
 					pModule = pUser->GetModules().FindModule(Info.GetName());
 					// Check if module is loaded by all or some networks
@@ -1378,7 +1396,7 @@ public:
 				}
 				l["CanBeLoadedGlobally"] = CString(Info.SupportsType(CModInfo::GlobalModule));
 				// Check if module is loaded globally
-				l["LoadedGlobally"] = CString(CZNC::Get().GetModules().FindModule(Info.GetName()) != NULL);
+				l["LoadedGlobally"] = CString(CZNC::Get().GetModules().FindModule(Info.GetName()) != nullptr);
 
 				if (!spSession->IsAdmin() && pUser && pUser->DenyLoadMod()) {
 					l["Disabled"] = "true";
@@ -1445,7 +1463,7 @@ public:
 			return true;
 		}
 
-		/* If pUser is NULL, we are adding a user, else we are editing this one */
+		/* If pUser is nullptr, we are adding a user, else we are editing this one */
 
 		CString sUsername = WebSock.GetParam("user");
 		if (!pUser && CZNC::Get().FindUser(sUsername)) {
@@ -1870,11 +1888,11 @@ public:
 
 				CModule *pMod = CZNC::Get().GetModules().FindModule(sModName);
 				if (!pMod) {
-					if (!CZNC::Get().GetModules().LoadModule(sModName, sArgs, CModInfo::GlobalModule, NULL, NULL, sModRet)) {
+					if (!CZNC::Get().GetModules().LoadModule(sModName, sArgs, CModInfo::GlobalModule, nullptr, nullptr, sModRet)) {
 						sModLoadError = "Unable to load module [" + sModName + "] [" + sModRet + "]";
 					}
 				} else if (pMod->GetArgs() != sArgs) {
-					if (!CZNC::Get().GetModules().ReloadModule(sModName, sArgs, NULL, NULL, sModRet)) {
+					if (!CZNC::Get().GetModules().ReloadModule(sModName, sArgs, nullptr, nullptr, sModRet)) {
 						sModLoadError = "Unable to reload module [" + sModName + "] [" + sModRet + "]";
 					}
 				}

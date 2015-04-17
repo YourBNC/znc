@@ -50,7 +50,7 @@ class CModPerl: public CModule {
 	PerlInterpreter *m_pPerl;
 public:
 	MODCONSTRUCTOR(CModPerl) {
-		m_pPerl = NULL;
+		m_pPerl = nullptr;
 	}
 
 #define PSTART dSP; I32 ax; int ret = 0; ENTER; SAVETMPS; PUSHMARK(SP)
@@ -69,7 +69,7 @@ public:
 		int argc = 6;
 		char *pArgv[] = {"", "-T", "-w",
 			"-I", const_cast<char*>(sTmp.c_str()),
-			const_cast<char*>(sModPath.c_str()), NULL};
+			const_cast<char*>(sModPath.c_str()), nullptr};
 		char **argv = pArgv;
 		char *** const pEnviron =
 #if defined(__APPLE__) && defined(__MACH__)
@@ -87,7 +87,7 @@ public:
 			}
 			perl_free(m_pPerl);
 			PERL_SYS_TERM();
-			m_pPerl = NULL;
+			m_pPerl = nullptr;
 			DEBUG(__PRETTY_FUNCTION__ << " can't init perl");
 			return false;
 		}
@@ -133,7 +133,7 @@ public:
 		return result;
 	}
 
-	virtual EModRet OnModuleUnloading(CModule* pModule, bool& bSuccess, CString& sRetMsg) override {
+	EModRet OnModuleUnloading(CModule* pModule, bool& bSuccess, CString& sRetMsg) override {
 		CPerlModule* pMod = AsPerlModule(pModule);
 		if (pMod) {
 			EModRet result = HALT;
@@ -208,7 +208,7 @@ public:
 		return result;
 	}
 
-	virtual void OnGetAvailableMods(set<CModInfo>& ssMods, CModInfo::EModuleType eType) override {
+	void OnGetAvailableMods(set<CModInfo>& ssMods, CModInfo::EModuleType eType) override {
 
 		unsigned int a = 0;
 		CDir Dir;
@@ -319,7 +319,7 @@ void CPerlSocket::ReadLine(const CString& sLine) {
 }
 Csock* CPerlSocket::GetSockObj(const CString& sHost, unsigned short uPort) {
 	CPerlModule* pMod = AsPerlModule(GetModule());
-	Csock* result = NULL;
+	Csock* result = nullptr;
 	if (pMod) {
 		SOCKSTART;
 		PUSH_STR("_Accepted");

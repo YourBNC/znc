@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _IRCSOCK_H
-#define _IRCSOCK_H
+#ifndef ZNC_IRCSOCK_H
+#define ZNC_IRCSOCK_H
 
 #include <znc/zncconfig.h>
 #include <znc/Socket.h>
@@ -35,6 +35,9 @@ class CIRCSock : public CIRCSocket {
 public:
 	CIRCSock(CIRCNetwork* pNetwork);
 	virtual ~CIRCSock();
+
+	CIRCSock(const CIRCSock&) = delete;
+	CIRCSock& operator=(const CIRCSock&) = delete;
 
 	typedef enum {
 		// These values must line up with their position in the CHANMODE argument to raw 005
@@ -56,13 +59,13 @@ public:
 	bool OnServerCapAvailable(const CString& sCap);
 	// !Message Handlers
 
-	virtual void ReadLine(const CString& sData);
-	virtual void Connected();
-	virtual void Disconnected();
-	virtual void ConnectionRefused();
-	virtual void SockError(int iErrno, const CString& sDescription);
-	virtual void Timeout();
-	virtual void ReachedMaxBuffer();
+	void ReadLine(const CString& sData) override;
+	void Connected() override;
+	void Disconnected() override;
+	void ConnectionRefused() override;
+	void SockError(int iErrno, const CString& sDescription) override;
+	void Timeout() override;
+	void ReachedMaxBuffer() override;
 
 	void PutIRC(const CString& sLine);
 	void PutIRCQuick(const CString& sLine); //!< Should be used for PONG only
@@ -149,4 +152,4 @@ protected:
 	friend class CIRCFloodTimer;
 };
 
-#endif // !_IRCSOCK_H
+#endif // !ZNC_IRCSOCK_H

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef ZNC_UTILS_H
+#define ZNC_UTILS_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -65,13 +65,13 @@ public:
 	static CString GetPass(const CString& sPrompt);
 	static bool GetInput(const CString& sPrompt, CString& sRet, const CString& sDefault = "", const CString& sHint = "");
 	static bool GetBoolInput(const CString& sPrompt, bool bDefault);
-	static bool GetBoolInput(const CString& sPrompt, bool *pbDefault = NULL);
+	static bool GetBoolInput(const CString& sPrompt, bool *pbDefault = nullptr);
 	static bool GetNumInput(const CString& sPrompt, unsigned int& uRet, unsigned int uMin = 0, unsigned int uMax = ~0, unsigned int uDefault = ~0);
 
 	static unsigned long long GetMillTime() {
 		struct timeval tv;
 		unsigned long long iTime = 0;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, nullptr);
 		iTime = (unsigned long long) tv.tv_sec * 1000;
 		iTime += ((unsigned long long) tv.tv_usec / 1000);
 		return iTime;
@@ -100,8 +100,7 @@ public:
 		EX_Restart
 	} EType;
 
-	CException(EType e) {
-		m_eType = e;
+	CException(EType e) : m_eType(e) {
 	}
 	virtual ~CException() {}
 
@@ -143,17 +142,16 @@ public:
 	 *
 	 *  @param uPreferredWidth If width of table is bigger than this, text in cells will be wrapped to several lines, if possible
 	 */
-	explicit CTable(size_type uPreferredWidth = 110) : m_uPreferredWidth(uPreferredWidth) {}
+	CTable() : m_vsHeaders(), m_vsOutput() {}
 	virtual ~CTable() {}
 
 	/** Adds a new column to the table.
 	 *  Please note that you should add all columns before starting to fill
 	 *  the table!
 	 *  @param sName The name of the column.
-	 *  @param bWrappable True if long lines can be wrapped in the same cell.
 	 *  @return false if a column by that name already existed.
 	 */
-	bool AddColumn(const CString& sName, bool bWrappable = true);
+	bool AddColumn(const CString& sName);
 
 	/** Adds a new row to the table.
 	 *  After calling this you can fill the row with content.
@@ -177,14 +175,6 @@ public:
 	 */
 	bool GetLine(unsigned int uIdx, CString& sLine) const;
 
-	/** Return the width of the given column.
-	 *  Please note that adding and filling new rows might change the
-	 *  result of this function!
-	 *  @param uIdx The index of the column you are interested in.
-	 *  @return The width of the column.
-	 */
-	CString::size_type GetColumnWidth(unsigned int uIdx) const;
-
 	/// Completely clear the table.
 	void Clear();
 
@@ -196,14 +186,10 @@ public:
 private:
 	unsigned int GetColumnIndex(const CString& sName) const;
 	VCString Render() const;
-	static VCString WrapWords(const CString& s, size_type uWidth);
 
 protected:
+	// TODO: cleanup these fields before 1.7.0 (I don't want to break ABI)
 	VCString m_vsHeaders;
-	std::vector<CString::size_type> m_vuMaxWidths;  // Column don't need to be bigger than this
-	std::vector<CString::size_type> m_vuMinWidths;  // Column can't be thiner than this
-	std::vector<bool> m_vbWrappable;
-	size_type m_uPreferredWidth;
 	mutable VCString m_vsOutput;  // Rendered table
 };
 
@@ -222,6 +208,9 @@ public:
 	 */
 	CBlowfish(const CString & sPassword, int iEncrypt, const CString & sIvec = "");
 	~CBlowfish();
+
+	CBlowfish(const CBlowfish&) = default;
+	CBlowfish& operator=(const CBlowfish&) = default;
 
 	//! output must be freed
 	static unsigned char *MD5(const unsigned char *input, u_int ilen);
@@ -252,9 +241,7 @@ private:
 template<typename K, typename V = bool>
 class TCacheMap {
 public:
-	TCacheMap(unsigned int uTTL = 5000) {
-		m_uTTL = uTTL;
-	}
+	TCacheMap(unsigned int uTTL = 5000) : m_mItems(), m_uTTL(uTTL) {}
 
 	virtual ~TCacheMap() {}
 
@@ -310,15 +297,15 @@ public:
 	}
 
 	/**
-	 * @brief Performs a Cleanup() and returns a pointer to the object, or NULL
+	 * @brief Performs a Cleanup() and returns a pointer to the object, or nullptr
 	 * @param Item The item to check for
-	 * @return Pointer to the item or NULL if there is no suitable one
+	 * @return Pointer to the item or nullptr if there is no suitable one
 	 */
 	V* GetItem(const K& Item) {
 		Cleanup();
 		iterator it = m_mItems.find(Item);
 		if (it == m_mItems.end())
-			return NULL;
+			return nullptr;
 		return &it->second.second;
 	}
 
@@ -366,4 +353,4 @@ protected:
 	unsigned int         m_uTTL;     //!< Default time-to-live duration
 };
 
-#endif // !_UTILS_H
+#endif // !ZNC_UTILS_H

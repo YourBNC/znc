@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _THREADS_H
-#define _THREADS_H
+#ifndef ZNC_THREADS_H
+#define ZNC_THREADS_H
 
 #include <znc/zncconfig.h>
 
@@ -38,8 +38,8 @@ class CMutex {
 public:
 	friend class CConditionVariable;
 
-	CMutex() {
-		int i = pthread_mutex_init(&m_mutex, NULL);
+	CMutex() : m_mutex() {
+		int i = pthread_mutex_init(&m_mutex, nullptr);
 		if (i) {
 			CUtils::PrintError("Can't initialize mutex: " + CString(strerror(errno)));
 			exit(1);
@@ -123,8 +123,8 @@ private:
  */
 class CConditionVariable {
 public:
-	CConditionVariable() {
-		int i = pthread_cond_init(&m_cond, NULL);
+	CConditionVariable() : m_cond() {
+		int i = pthread_cond_init(&m_cond, nullptr);
 		if (i) {
 			CUtils::PrintError("Can't initialize condition variable: "
 					+ CString(strerror(errno)));
@@ -188,8 +188,8 @@ public:
 		 */
 		int i = sigfillset(&sigmask);
 		i |= pthread_sigmask(SIG_SETMASK, &sigmask, &old_sigmask);
-		i |= pthread_create(&thr, NULL, func, arg);
-		i |= pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
+		i |= pthread_create(&thr, nullptr, func, arg);
+		i |= pthread_sigmask(SIG_SETMASK, &old_sigmask, nullptr);
 		i |= pthread_detach(thr);
 		if (i) {
 			CUtils::PrintError("Can't start new thread: "
@@ -295,7 +295,7 @@ private:
 	static void *threadPoolFunc(void *arg) {
 		CThreadPool &pool = *reinterpret_cast<CThreadPool *>(arg);
 		pool.threadFunc();
-		return NULL;
+		return nullptr;
 	}
 
 	// mutex protecting all of these members
@@ -327,4 +327,4 @@ private:
 };
 
 #endif // HAVE_PTHREAD
-#endif // !_THREADS_H
+#endif // !ZNC_THREADS_H

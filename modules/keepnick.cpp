@@ -26,7 +26,7 @@ public:
 	CKeepNickTimer(CKeepNickMod *pMod);
 	~CKeepNickTimer() {}
 
-	void RunJob();
+	void RunJob() override;
 
 private:
 	CKeepNickMod* m_pMod;
@@ -44,7 +44,7 @@ public:
 	~CKeepNickMod() {}
 
 	bool OnLoad(const CString& sArgs, CString& sMessage) override {
-		m_pTimer = NULL;
+		m_pTimer = nullptr;
 
 		// Check if we need to start the timer
 		if (GetNetwork()->IsIRCConnected())
@@ -135,10 +135,10 @@ public:
 
 		m_pTimer->Stop();
 		RemTimer(m_pTimer);
-		m_pTimer = NULL;
+		m_pTimer = nullptr;
 	}
 
-	virtual EModRet OnUserRaw(CString& sLine) override {
+	EModRet OnUserRaw(CString& sLine) override {
 		// We dont care if we are not connected to IRC
 		if (!GetNetwork()->IsIRCConnected())
 			return CONTINUE;
@@ -164,7 +164,7 @@ public:
 		return CONTINUE;
 	}
 
-	virtual EModRet OnRaw(CString& sLine) override {
+	EModRet OnRaw(CString& sLine) override {
 		// Are we trying to get our primary nick and we caused this error?
 		// :irc.server.net 433 mynick badnick :Nickname is already in use.
 		if (m_pTimer && sLine.Token(1) == "433" && sLine.Token(3).Equals(GetNick()))
@@ -191,7 +191,7 @@ public:
 	}
 
 private:
-	// If this is NULL, we are turned off for some reason
+	// If this is nullptr, we are turned off for some reason
 	CKeepNickTimer* m_pTimer;
 };
 

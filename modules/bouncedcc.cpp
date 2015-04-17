@@ -33,16 +33,16 @@ public:
 
 	static unsigned short DCCRequest(const CString& sNick, unsigned long uLongIP, unsigned short uPort, const CString& sFileName, bool bIsChat, CBounceDCCMod* pMod, const CString& sRemoteIP);
 
-	void ReadLine(const CString& sData);
-	virtual void ReadData(const char* data, size_t len) override;
-	virtual void ReadPaused() override;
-	virtual void Timeout() override;
-	virtual void ConnectionRefused() override;
-	virtual void ReachedMaxBuffer() override;
-	virtual void SockError(int iErrno, const CString& sDescription) override;
-	virtual void Connected() override;
-	virtual void Disconnected() override;
-	virtual Csock* GetSockObj(const CString& sHost, unsigned short uPort) override;
+	void ReadLine(const CString& sData) override;
+	void ReadData(const char* data, size_t len) override;
+	void ReadPaused() override;
+	void Timeout() override;
+	void ConnectionRefused() override;
+	void ReachedMaxBuffer() override;
+	void SockError(int iErrno, const CString& sDescription) override;
+	void Connected() override;
+	void Disconnected() override;
+	Csock* GetSockObj(const CString& sHost, unsigned short uPort) override;
 	void Shutdown();
 	void PutServ(const CString& sLine);
 	void PutPeer(const CString& sLine);
@@ -158,7 +158,7 @@ public:
 		return GetNV("UseClientIP").ToBool();
 	}
 
-	virtual EModRet OnUserCTCP(CString& sTarget, CString& sMessage) override {
+	EModRet OnUserCTCP(CString& sTarget, CString& sMessage) override {
 		if (sMessage.StartsWith("DCC ")) {
 			CString sType = sMessage.Token(1, false, " ", false, "\"", "\"", true);
 			CString sFile = sMessage.Token(2, false, " ", false, "\"", "\"", false);
@@ -212,7 +212,7 @@ public:
 		return CONTINUE;
 	}
 
-	virtual EModRet OnPrivCTCP(CNick& Nick, CString& sMessage) override {
+	EModRet OnPrivCTCP(CNick& Nick, CString& sMessage) override {
 		CIRCNetwork* pNetwork = GetNetwork();
 		if (sMessage.StartsWith("DCC ") && pNetwork->IsUserAttached()) {
 			// DCC CHAT chat 2453612361 44592
@@ -278,7 +278,7 @@ CDCCBounce::CDCCBounce(CBounceDCCMod* pMod, unsigned long uLongIP, unsigned shor
 	m_pModule = pMod;
 	m_bIsChat = bIsChat;
 	m_sLocalIP = pMod->GetLocalDCCIP();
-	m_pPeer = NULL;
+	m_pPeer = nullptr;
 	m_bIsRemote = false;
 
 	if (bIsChat) {
@@ -294,7 +294,7 @@ CDCCBounce::CDCCBounce(CBounceDCCMod* pMod, const CString& sHostname, unsigned s
 	m_uRemotePort = 0;
 	m_bIsChat = bIsChat;
 	m_pModule = pMod;
-	m_pPeer = NULL;
+	m_pPeer = nullptr;
 	m_sRemoteNick = sRemoteNick;
 	m_sFileName = sFileName;
 	m_sRemoteIP = sRemoteIP;
@@ -311,7 +311,7 @@ CDCCBounce::CDCCBounce(CBounceDCCMod* pMod, const CString& sHostname, unsigned s
 CDCCBounce::~CDCCBounce() {
 	if (m_pPeer) {
 		m_pPeer->Shutdown();
-		m_pPeer = NULL;
+		m_pPeer = nullptr;
 	}
 }
 
@@ -409,7 +409,7 @@ void CDCCBounce::Disconnected() {
 }
 
 void CDCCBounce::Shutdown() {
-	m_pPeer = NULL;
+	m_pPeer = nullptr;
 	DEBUG(GetSockName() << " == Close(); because my peer told me to");
 	Close();
 }

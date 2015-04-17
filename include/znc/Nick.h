@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _NICK_H
-#define _NICK_H
+#ifndef ZNC_NICK_H
+#define ZNC_NICK_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -32,6 +32,9 @@ public:
 	CNick();
 	CNick(const CString& sNick);
 	~CNick();
+
+	CNick(const CNick&) = default;
+	CNick& operator=(const CNick&) = default;
 
 	void Reset();
 	void Parse(const CString& sNickMask);
@@ -68,4 +71,4 @@ protected:
 	CString      m_sHost;
 };
 
-#endif // !_NICK_H
+#endif // !ZNC_NICK_H

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _USER_H
-#define _USER_H
+#ifndef ZNC_USER_H
+#define ZNC_USER_H
 
 #include <znc/zncconfig.h>
 #include <znc/Utils.h>
@@ -38,6 +38,9 @@ class CUser {
 public:
 	CUser(const CString& sUserName);
 	~CUser();
+
+	CUser(const CUser&) = delete;
+	CUser& operator=(const CUser&) = delete;
 
 	bool ParseConfig(CConfig* Config, CString& sError);
 
@@ -80,12 +83,12 @@ public:
 	bool HasSpaceForNewNetwork() const;
 	// !Networks
 
-	bool PutUser(const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutAllUser(const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutStatus(const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutStatusNotice(const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutModule(const CString& sModule, const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
-	bool PutModNotice(const CString& sModule, const CString& sLine, CClient* pClient = NULL, CClient* pSkipClient = NULL);
+	bool PutUser(const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutAllUser(const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutStatus(const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutStatusNotice(const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutModule(const CString& sModule, const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
+	bool PutModNotice(const CString& sModule, const CString& sLine, CClient* pClient = nullptr, CClient* pSkipClient = nullptr);
 
 	bool IsUserAttached() const;
 	void UserConnected(CClient* pClient);
@@ -241,4 +244,4 @@ private:
 	bool LoadModule(const CString& sModName, const CString& sArgs, const CString& sNotice, CString& sError);
 };
 
-#endif // !_USER_H
+#endif // !ZNC_USER_H

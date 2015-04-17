@@ -34,7 +34,7 @@ CThreadPool& CThreadPool::Get() {
 	return pool;
 }
 
-CThreadPool::CThreadPool() : m_done(false), m_num_threads(0), m_num_idle(0) {
+CThreadPool::CThreadPool() : m_mutex(), m_cond(), m_cancellationCond(), m_exit_cond(), m_done(false), m_num_threads(0), m_num_idle(0), m_iJobPipe{0,0}, m_jobs() {
 	if (pipe(m_iJobPipe)) {
 		DEBUG("Ouch, can't open pipe for thread pool: " << strerror(errno));
 		exit(1);
@@ -68,7 +68,7 @@ void CThreadPool::handlePipeReadable() const {
 }
 
 CJob *CThreadPool::getJobFromPipe() const {
-	CJob* a = NULL;
+	CJob* a = nullptr;
 	ssize_t need = sizeof(a);
 	ssize_t r = read(m_iJobPipe[0], &a, need);
 	if (r != need) {

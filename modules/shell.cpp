@@ -44,8 +44,8 @@ public:
 		SetWSock(open("/dev/null", O_WRONLY));
 	}
 	// These next two function's bodies are at the bottom of the file since they reference CShellMod
-	virtual void ReadLine(const CString& sData) override;
-	virtual void Disconnected() override;
+	void ReadLine(const CString& sData) override;
+	void Disconnected() override;
 
 	CShellMod* m_pParent;
 
@@ -67,7 +67,7 @@ public:
 		}
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sMessage) override
+	bool OnLoad(const CString& sArgs, CString& sMessage) override
 	{
 #ifndef MOD_SHELL_ALLOW_EVERYONE
 		if (!GetUser()->IsAdmin()) {
@@ -79,7 +79,7 @@ public:
 		return true;
 	}
 
-	virtual void OnModCommand(const CString& sLine) override {
+	void OnModCommand(const CString& sLine) override {
 		CString sCommand = sLine.Token(0);
 		if (sCommand.Equals("cd")) {
 			CString sArg = sLine.Token(1, true);
@@ -122,7 +122,7 @@ void CShellSock::ReadLine(const CString& sData) {
 
 	m_pParent->SetClient(m_pClient);
 	m_pParent->PutShell(sLine);
-	m_pParent->SetClient(NULL);
+	m_pParent->SetClient(nullptr);
 }
 
 void CShellSock::Disconnected() {
@@ -134,7 +134,7 @@ void CShellSock::Disconnected() {
 
 	m_pParent->SetClient(m_pClient);
 	m_pParent->PutShell("znc$");
-	m_pParent->SetClient(NULL);
+	m_pParent->SetClient(nullptr);
 }
 
 template<> void TModInfo<CShellMod>(CModInfo& Info) {

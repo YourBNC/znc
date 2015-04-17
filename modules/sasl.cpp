@@ -16,6 +16,7 @@
 
 #include <znc/IRCNetwork.h>
 #include <znc/IRCSock.h>
+#include <algorithm>
 
 static const struct {
 	const char *szName;
@@ -23,8 +24,7 @@ static const struct {
 	const bool  bDefault;
 } SupportedMechanisms[] = {
 	{ "EXTERNAL",           "TLS certificate, for use with the *cert module", false },
-	{ "PLAIN",              "Plain text negotiation, this should work always if the network supports SASL", true },
-	{ NULL, NULL, false }
+	{ "PLAIN",              "Plain text negotiation, this should work always if the network supports SASL", true }
 };
 
 #define NV_REQUIRE_AUTH     "require_auth"
@@ -86,10 +86,10 @@ public:
 		Mechanisms.AddColumn("Mechanism");
 		Mechanisms.AddColumn("Description");
 
-		for (size_t i = 0; SupportedMechanisms[i].szName != NULL; i++) {
+		for (const auto& it : SupportedMechanisms) {
 			Mechanisms.AddRow();
-			Mechanisms.SetCell("Mechanism",   SupportedMechanisms[i].szName);
-			Mechanisms.SetCell("Description", SupportedMechanisms[i].szDescription);
+			Mechanisms.SetCell("Mechanism",   it.szName);
+			Mechanisms.SetCell("Description", it.szDescription);
 		}
 
 		PutModule("The following mechanisms are available:");
@@ -137,8 +137,8 @@ public:
 	}
 
 	bool SupportsMechanism(const CString& sMechanism) const {
-		for (size_t i = 0; SupportedMechanisms[i].szName != NULL; i++) {
-			if (sMechanism.Equals(SupportedMechanisms[i].szName)) {
+		for (const auto& it : SupportedMechanisms) {
+			if (sMechanism.Equals(it.szName)) {
 				return true;
 			}
 		}
@@ -150,13 +150,13 @@ public:
 		if (GetNV(NV_MECHANISMS).empty()) {
 			CString sDefaults = "";
 
-			for (size_t i = 0; SupportedMechanisms[i].szName != NULL; i++) {
-				if (SupportedMechanisms[i].bDefault) {
+			for (const auto& it : SupportedMechanisms) {
+				if (it.bDefault) {
 					if (!sDefaults.empty()) {
 						sDefaults += " ";
 					}
 
-					sDefaults += SupportedMechanisms[i].szName;
+					sDefaults += it.szName;
 				}
 			}
 
@@ -188,11 +188,11 @@ public:
 		}
 	}
 
-	virtual bool OnServerCapAvailable(const CString& sCap) override {
+	bool OnServerCapAvailable(const CString& sCap) override {
 		return sCap.Equals("sasl");
 	}
 
-	virtual void OnServerCapResult(const CString& sCap, bool bSuccess) override {
+	void OnServerCapResult(const CString& sCap, bool bSuccess) override {
 		if (sCap.Equals("sasl")) {
 			if (bSuccess) {
 				GetMechanismsString().Split(" ", m_Mechanisms);
@@ -212,7 +212,7 @@ public:
 		}
 	}
 
-	virtual EModRet OnRaw(CString &sLine) override {
+	EModRet OnRaw(CString &sLine) override {
 		if (sLine.Token(0).Equals("AUTHENTICATE")) {
 			Authenticate(sLine.Token(1, true));
 		} else if (sLine.Token(1).Equals("903")) {
@@ -246,16 +246,50 @@ public:
 		return HALT;
 	}
 
-	virtual void OnIRCConnected() override {
+	void OnIRCConnected() override {
 		/* Just incase something slipped through, perhaps the server doesn't
 		 * respond to our CAP negotiation. */
 
 		CheckRequireAuth();
 	}
 
-	virtual void OnIRCDisconnected() override {
+	void OnIRCDisconnected() override {
 		m_bAuthenticated = false;
 	}
+
+	CString GetWebMenuTitle() override { return "SASL"; }
+
+	bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
+		if (sPageName != "index") {
+			// only accept requests to index
+			return false;
+		}
+
+		if (WebSock.IsPost()) {
+			SetNV("username", WebSock.GetParam("username"));
+			CString sPassword = WebSock.GetParam("password");
+			if (!sPassword.empty()) {
+				SetNV("password", sPassword);
+			}
+			SetNV(NV_REQUIRE_AUTH, WebSock.GetParam("require_auth"));
+			SetNV(NV_MECHANISMS, WebSock.GetParam("mechanisms"));
+		}
+
+		Tmpl["Username"] = GetNV("username");
+		Tmpl["Password"] = GetNV("password");
+		Tmpl["RequireAuth"] = GetNV(NV_REQUIRE_AUTH);
+		Tmpl["Mechanisms"] = GetMechanismsString();
+
+		for (const auto& it : SupportedMechanisms) {
+			CTemplate& Row = Tmpl.AddRow("MechanismLoop");
+			CString sName(it.szName);
+			Row["Name"] = sName;
+			Row["Description"] = CString(it.szDescription);
+		}
+
+		return true;
+	}
+
 private:
 	Mechanisms m_Mechanisms;
 	bool m_bAuthenticated;

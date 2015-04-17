@@ -21,6 +21,12 @@
 class CChanSaverMod : public CModule {
 public:
 	MODCONSTRUCTOR(CChanSaverMod) {
+	}
+
+	virtual ~CChanSaverMod() {
+	}
+
+	bool OnLoad(const CString& sArgsi, CString& sMessage) override {
 		switch (GetType()) {
 			case CModInfo::GlobalModule:
 				LoadUsers();
@@ -32,9 +38,7 @@ public:
 				LoadNetwork(GetNetwork());
 				break;
 		}
-	}
-
-	virtual ~CChanSaverMod() {
+		return true;
 	}
 
 	void LoadUsers() {
@@ -62,13 +66,13 @@ public:
 		}
 	}
 
-	virtual void OnJoin(const CNick& Nick, CChan& Channel) override {
+	void OnJoin(const CNick& Nick, CChan& Channel) override {
 		if (!Channel.InConfig() && GetNetwork()->GetIRCNick().NickEquals(Nick.GetNick())) {
 			Channel.SetInConfig(true);
 		}
 	}
 
-	virtual void OnPart(const CNick& Nick, CChan& Channel, const CString& sMessage) override {
+	void OnPart(const CNick& Nick, CChan& Channel, const CString& sMessage) override {
 		if (Channel.InConfig() && GetNetwork()->GetIRCNick().NickEquals(Nick.GetNick())) {
 			Channel.SetInConfig(false);
 		}

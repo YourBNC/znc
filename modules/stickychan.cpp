@@ -32,9 +32,9 @@ public:
 	{
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sMessage) override;
+	bool OnLoad(const CString& sArgs, CString& sMessage) override;
 
-	virtual EModRet OnUserPart(CString& sChannel, CString& sMessage) override
+	EModRet OnUserPart(CString& sChannel, CString& sMessage) override
 	{
 		for (MCString::iterator it = BeginNV(); it != EndNV(); ++it)
 		{
@@ -53,6 +53,20 @@ public:
 		return CONTINUE;
 	}
 
+	virtual void OnMode(const CNick& pOpNick, CChan& Channel, char uMode, const CString& sArg, bool bAdded, bool bNoChange) override {
+		if (uMode == CChan::M_Key) {
+			if (bAdded) {
+				// We ignore channel key "*" because of some broken nets.
+				if (sArg != "*")
+				{
+					SetNV(Channel.GetName(), sArg, true);
+				}
+			} else {
+				SetNV(Channel.GetName(), "", true);
+			}
+		}
+	}
+
 	void OnStickCommand(const CString& sCommand)
 	{
 		CString sChannel = sCommand.Token(1).AsLower();
@@ -60,7 +74,7 @@ public:
 			PutModule("Usage: Stick <#channel> [key]");
 			return;
 		}
-		SetNV(sChannel, sCommand.Token(2));
+		SetNV(sChannel, sCommand.Token(2), true);
 		PutModule("Stuck " + sChannel);
 	}
 
@@ -70,9 +84,7 @@ public:
 			PutModule("Usage: Unstick <#channel>");
 			return;
 		}
-		MCString::iterator it = FindNV(sChannel);
-		if (it != EndNV())
-			DelNV(it);
+		DelNV(sChannel, true);
 		PutModule("Unstuck " + sChannel);
 	}
 
@@ -116,9 +128,9 @@ public:
 		}
 	}
 
-	virtual CString GetWebMenuTitle() override { return "Sticky Chans"; }
+	CString GetWebMenuTitle() override { return "Sticky Chans"; }
 
-	virtual bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
+	bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
 		if (sPageName == "index") {
 			bool bSubmitted = (WebSock.GetParam("submitted").ToInt() != 0);
 
@@ -154,7 +166,7 @@ public:
 		return false;
 	}
 
-	virtual bool OnEmbeddedWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
+	bool OnEmbeddedWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
 		if (sPageName == "webadmin/channel") {
 			CString sChan = Tmpl["ChanName"];
 			bool bStick = FindNV(sChan) != EndNV();

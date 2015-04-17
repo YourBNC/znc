@@ -62,7 +62,7 @@ unsigned char* CString::strnchr(const unsigned char* src, unsigned char c, unsig
 		*piCount = 0;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 int CString::CaseCmp(const CString& s, CString::size_type uLen) const {
@@ -104,7 +104,7 @@ bool CString::WildCmp(const CString& sWild, const CString& sString, CaseSensitiv
 
 	// Written by Jack Handy - jakkhandy@hotmail.com
 	const char *wild = sWld.c_str(), *CString = sStr.c_str();
-	const char *cp = NULL, *mp = NULL;
+	const char *cp = nullptr, *mp = nullptr;
 
 	while ((*CString) && (*wild != '*')) {
 		if ((*wild != *CString) && (*wild != '?')) {
@@ -144,8 +144,7 @@ bool CString::WildCmp(const CString& sWild, CaseSensitivity cs) const {
 }
 
 CString& CString::MakeUpper() {
-	for (size_type a = 0; a < length(); a++) {
-		char& c = (*this)[a];
+	for (char& c : *this) {
 		//TODO use unicode
 		c = (char)toupper(c);
 	}
@@ -154,8 +153,7 @@ CString& CString::MakeUpper() {
 }
 
 CString& CString::MakeLower() {
-	for (size_type a = 0; a < length(); a++) {
-		char& c = (*this)[a];
+	for (char& c : *this) {
 		//TODO use unicode
 		c = (char)tolower(c);
 	}
@@ -222,7 +220,7 @@ CString CString::Escape_n(EEscape eFrom, EEscape eTo) const {
 							base = 16;
 						}
 
-						char* endptr = NULL;
+						char* endptr = nullptr;
 						unsigned long int b = strtol((const char*) (pTmp +2 + (base == 16)), &endptr, base);
 
 						if ((*endptr == ';') && (b <= 255)) { // incase they do something like &#7777777777;
@@ -648,9 +646,7 @@ CString::size_type CString::URLSplit(MCString& msRet) const {
 	VCString vsPairs;
 	Split("&", vsPairs);
 
-	for (size_t a = 0; a < vsPairs.size(); a++) {
-		const CString& sPair = vsPairs[a];
-
+	for (const CString& sPair : vsPairs) {
 		msRet[sPair.Token(0, false, "=").Escape(CString::EURL, CString::EASCII)] = sPair.Token(1, true, "=").Escape(CString::EURL, CString::EASCII);
 	}
 
@@ -781,8 +777,8 @@ CString::size_type CString::Split(const CString& sDelim, SCString& ssRet, bool b
 
 	ssRet.clear();
 
-	for (size_t a = 0; a < vsTokens.size(); a++) {
-		ssRet.insert(vsTokens[a]);
+	for (const CString& sToken : vsTokens) {
+		ssRet.insert(sToken);
 	}
 
 	return ssRet.size();
@@ -1105,15 +1101,15 @@ bool CString::ToBool() const {
 			!sTrimmed.Equals("n"));
 }
 
-short CString::ToShort() const { return (short int)strtol(this->c_str(), (char**) NULL, 10); }
-unsigned short CString::ToUShort() const { return (unsigned short int)strtoul(this->c_str(), (char**) NULL, 10); }
-unsigned int CString::ToUInt() const { return (unsigned int)strtoul(this->c_str(), (char**) NULL, 10); }
-int CString::ToInt() const { return (int)strtol(this->c_str(), (char**) NULL, 10); }
-long CString::ToLong() const { return strtol(this->c_str(), (char**) NULL, 10); }
-unsigned long CString::ToULong() const { return strtoul(c_str(), NULL, 10); }
-unsigned long long CString::ToULongLong() const { return strtoull(c_str(), NULL, 10); }
-long long CString::ToLongLong() const { return strtoll(c_str(), NULL, 10); }
-double CString::ToDouble() const { return strtod(c_str(), NULL); }
+short CString::ToShort() const { return (short int)strtol(this->c_str(), (char**) nullptr, 10); }
+unsigned short CString::ToUShort() const { return (unsigned short int)strtoul(this->c_str(), (char**) nullptr, 10); }
+unsigned int CString::ToUInt() const { return (unsigned int)strtoul(this->c_str(), (char**) nullptr, 10); }
+int CString::ToInt() const { return (int)strtol(this->c_str(), (char**) nullptr, 10); }
+long CString::ToLong() const { return strtol(this->c_str(), (char**) nullptr, 10); }
+unsigned long CString::ToULong() const { return strtoul(c_str(), nullptr, 10); }
+unsigned long long CString::ToULongLong() const { return strtoull(c_str(), nullptr, 10); }
+long long CString::ToLongLong() const { return strtoll(c_str(), nullptr, 10); }
+double CString::ToDouble() const { return strtod(c_str(), nullptr); }
 
 
 bool CString::Trim(const CString& s) {
@@ -1321,9 +1317,9 @@ MCString::status_t MCString::WriteToDisk(const CString& sPath, mode_t iMode) con
 		return MCS_EOPEN;
 	}
 
-	for (MCString::const_iterator it = this->begin(); it != this->end(); ++it) {
-		CString sKey = it->first;
-		CString sValue = it->second;
+	for (const auto& it : *this) {
+		CString sKey = it.first;
+		CString sValue = it.second;
 		if (!WriteFilter(sKey, sValue)) {
 			return MCS_EWRITEFIL;
 		}
@@ -1373,10 +1369,9 @@ static const char hexdigits[] = "0123456789abcdef";
 
 CString& MCString::Encode(CString& sValue) const {
 	CString sTmp;
-	for (CString::iterator it = sValue.begin(); it != sValue.end(); ++it) {
+	for (unsigned char c : sValue) {
 		// isalnum() needs unsigned char as argument and this code
 		// assumes unsigned, too.
-		unsigned char c = *it;
 		if (isalnum(c)) {
 			sTmp += c;
 		} else {

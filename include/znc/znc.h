@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _ZNC_H
-#define _ZNC_H
+#ifndef ZNC_H
+#define ZNC_H
 
 #include <znc/zncconfig.h>
 #include <znc/Client.h>
@@ -36,6 +36,9 @@ class CZNC {
 public:
 	CZNC();
 	~CZNC();
+
+	CZNC(const CZNC&) = delete;
+	CZNC& operator=(const CZNC&) = delete;
 
 	enum ConfigState {
 		ECONFIG_NOTHING,
@@ -71,7 +74,7 @@ public:
 	bool AddTrustedProxy(const CString& sHost);
 	bool RemTrustedProxy(const CString& sHost);
 	void Broadcast(const CString& sMessage, bool bAdminOnly = false,
-			CUser* pSkipUser = NULL, CClient* pSkipClient = NULL);
+			CUser* pSkipUser = nullptr, CClient* pSkipClient = nullptr);
 	void AddBytesRead(unsigned long long u) { m_uBytesRead += u; }
 	void AddBytesWritten(unsigned long long u) { m_uBytesWritten += u; }
 	unsigned long long BytesRead() const { return m_uBytesRead; }
@@ -151,7 +154,7 @@ public:
 	bool UpdateModule(const CString &sModule);
 
 	bool DeleteUser(const CString& sUsername);
-	bool AddUser(CUser* pUser, CString& sErrorRet);
+	bool AddUser(CUser* pUser, CString& sErrorRet, bool bStartup = false);
 	const std::map<CString,CUser*> & GetUserMap() const { return(m_msUsers); }
 
 	// Listener yummy
@@ -189,8 +192,13 @@ public:
 
 private:
 	CFile* InitPidFile();
-	bool DoRehash(CString& sError);
-	// Returns true if something was done
+
+	bool ReadConfig(CConfig& config, CString& sError);
+	bool LoadGlobal(CConfig& config, CString& sError);
+	bool LoadUsers(CConfig& config, CString& sError);
+	bool LoadListeners(CConfig& config, CString& sError);
+	void UnloadRemovedModules(const MCString& msModules);
+
 	bool HandleUserDeletion();
 	CString MakeConfigHeader();
 	bool AddListener(const CString& sLine, CString& sError);
@@ -234,4 +242,4 @@ protected:
 	bool                   m_bHideVersion;
 };
 
-#endif // !_ZNC_H
+#endif // !ZNC_H

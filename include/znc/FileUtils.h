@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _FILEUTILS_H
-#define _FILEUTILS_H
+#ifndef ZNC_FILEUTILS_H
+#define ZNC_FILEUTILS_H
 
 #include <znc/zncconfig.h>
 #include <znc/ZNCString.h>
@@ -151,15 +151,11 @@ protected:
 class CDir : public std::vector<CFile*> {
 public:
 
-	CDir(const CString& sDir) {
-		m_bDesc = false;
-		m_eSortAttr = CFile::FA_Name;
+	CDir(const CString& sDir) : m_eSortAttr(CFile::FA_Name), m_bDesc(false) {
 		Fill(sDir);
 	}
 
-	CDir() {
-		m_bDesc = false;
-		m_eSortAttr = CFile::FA_Name;
+	CDir() : m_eSortAttr(CFile::FA_Name), m_bDesc(false) {
 	}
 
 	~CDir() {
@@ -188,7 +184,7 @@ public:
 
 		struct dirent * de;
 
-		while ((de = readdir(dir)) != 0) {
+		while ((de = readdir(dir)) != nullptr) {
 			if ((strcmp(de->d_name, ".") == 0) || (strcmp(de->d_name, "..") == 0)) {
 				continue;
 			}
@@ -249,7 +245,7 @@ public:
 
 	static CString GetCWD() {
 		CString sRet;
-		char * pszCurDir = getcwd(NULL, 0);
+		char * pszCurDir = getcwd(nullptr, 0);
 		if (pszCurDir) {
 			sRet = pszCurDir;
 			free(pszCurDir);
@@ -263,4 +259,4 @@ protected:
 	CFile::EFileAttr m_eSortAttr;
 	bool             m_bDesc;
 };
-#endif // !_FILEUTILS_H
+#endif // !ZNC_FILEUTILS_H

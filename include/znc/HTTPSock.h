@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _HTTPSOCK_H
-#define _HTTPSOCK_H
+#ifndef ZNC_HTTPSOCK_H
+#define ZNC_HTTPSOCK_H
 
 #include <znc/zncconfig.h>
 #include <znc/Socket.h>
@@ -30,10 +30,10 @@ public:
 	virtual ~CHTTPSock();
 
 	// Csocket derived members
-	virtual void ReadData(const char* data, size_t len);
-	virtual void ReadLine(const CString& sData);
-	virtual void Connected();
-	virtual Csock* GetSockObj(const CString& sHost, unsigned short uPort) = 0;
+	void ReadData(const char* data, size_t len) override;
+	void ReadLine(const CString& sData) override;
+	void Connected() override;
+	Csock* GetSockObj(const CString& sHost, unsigned short uPort) override = 0;
 	// !Csocket derived members
 
 	// Hooks
@@ -106,6 +106,7 @@ protected:
 	bool                     m_bLoggedIn;
 	bool                     m_bPost;
 	bool                     m_bDone;
+	bool                     m_bBasicAuth;
 	unsigned long            m_uPostLen;
 	CString                  m_sPostData;
 	CString                  m_sURI;
@@ -125,4 +126,4 @@ protected:
 	CString                  m_sURIPrefix;
 };
 
-#endif // !_HTTPSOCK_H
+#endif // !ZNC_HTTPSOCK_H

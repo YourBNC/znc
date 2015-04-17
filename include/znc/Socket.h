@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SOCKET_H
-#define SOCKET_H
+#ifndef ZNC_SOCKET_H
+#define ZNC_SOCKET_H
 
 #include <znc/zncconfig.h>
 #include <znc/Csocket.h>
@@ -71,7 +71,7 @@ public:
 	CSockManager();
 	virtual ~CSockManager();
 
-	bool ListenHost(u_short iPort, const CString& sSockName, const CString& sBindHost, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = NULL, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
+	bool ListenHost(u_short iPort, const CString& sSockName, const CString& sBindHost, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = nullptr, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
 		CSListener L(iPort, sBindHost);
 
 		L.SetSockName(sSockName);
@@ -96,11 +96,11 @@ public:
 		return Listen(L, pcSock);
 	}
 
-	bool ListenAll(u_short iPort, const CString& sSockName, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = NULL, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
+	bool ListenAll(u_short iPort, const CString& sSockName, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = nullptr, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
 		return ListenHost(iPort, sSockName, "", bSSL, iMaxConns, pcSock, iTimeout, eAddr);
 	}
 
-	u_short ListenRand(const CString& sSockName, const CString& sBindHost, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = NULL, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
+	u_short ListenRand(const CString& sSockName, const CString& sBindHost, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = nullptr, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
 		unsigned short uPort = 0;
 		CSListener L(0, sBindHost);
 
@@ -128,11 +128,11 @@ public:
 		return uPort;
 	}
 
-	u_short ListenAllRand(const CString& sSockName, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = NULL, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
+	u_short ListenAllRand(const CString& sSockName, bool bSSL = false, int iMaxConns = SOMAXCONN, CZNCSock *pcSock = nullptr, u_int iTimeout = 0, EAddrType eAddr = ADDR_ALL) {
 		return(ListenRand(sSockName, "", bSSL, iMaxConns, pcSock, iTimeout, eAddr));
 	}
 
-	void Connect(const CString& sHostname, u_short iPort, const CString& sSockName, int iTimeout = 60, bool bSSL = false, const CString& sBindHost = "", CZNCSock *pcSock = NULL);
+	void Connect(const CString& sHostname, u_short iPort, const CString& sSockName, int iTimeout = 60, bool bSSL = false, const CString& sBindHost = "", CZNCSock *pcSock = nullptr);
 
 	unsigned int GetAnonConnectionCount(const CString &sIP) const;
 private:
@@ -142,6 +142,11 @@ private:
 	friend class CTDNSMonitorFD;
 #ifdef HAVE_THREADED_DNS
 	struct TDNSTask {
+		TDNSTask() : sHostname(""), iPort(0), sSockName(""), iTimeout(0), bSSL(false), sBindhost(""), pcSock(nullptr), bDoneTarget(false), bDoneBind(false), aiTarget(nullptr), aiBind(nullptr) {}
+
+		TDNSTask(const TDNSTask&) = delete;
+		TDNSTask& operator=(const TDNSTask&) = delete;
+
 		CString   sHostname;
 		u_short   iPort;
 		CString   sSockName;
@@ -157,6 +162,11 @@ private:
 	};
 	class CDNSJob : public CJob {
 	public:
+		CDNSJob() : sHostname(""), task(nullptr), pManager(nullptr), bBind(false), iRes(0), aiResult(nullptr) {}
+
+		CDNSJob(const CDNSJob&) = delete;
+		CDNSJob& operator=(const CDNSJob&) = delete;
+
 		CString       sHostname;
 		TDNSTask*     task;
 		CSockManager* pManager;
@@ -165,8 +175,8 @@ private:
 		int           iRes;
 		addrinfo*     aiResult;
 
-		void runThread();
-		void runMain();
+		void runThread() override;
+		void runMain() override;
 	};
 	void StartTDNSThread(TDNSTask* task, bool bBind);
 	void SetTDNSThreadFinished(TDNSTask* task, bool bBind, addrinfo* aiResult);
@@ -201,15 +211,18 @@ public:
 	CSocket(CModule* pModule, const CString& sHostname, unsigned short uPort, int iTimeout = 60);
 	virtual ~CSocket();
 
+	CSocket(const CSocket&) = delete;
+	CSocket& operator=(const CSocket&) = delete;
+
 	using Csock::Connect;
 	using Csock::Listen;
 
 	//! This defaults to closing the socket, feel free to override
-	virtual void ReachedMaxBuffer();
-	virtual void SockError(int iErrno, const CString& sDescription);
+	void ReachedMaxBuffer() override;
+	void SockError(int iErrno, const CString& sDescription) override;
 
 	//! This limits the global connections from this IP to defeat DoS attacks, feel free to override. The ACL used is provided by the main interface @see CZNC::AllowConnectionFrom
-	virtual bool ConnectionFrom(const CString& sHost, unsigned short uPort);
+	bool ConnectionFrom(const CString& sHost, unsigned short uPort) override;
 
 	//! Ease of use Connect, assigns to the manager and is subsequently tracked
 	bool Connect(const CString& sHostname, unsigned short uPort, bool bSSL = false, unsigned int uTimeout = 60);
@@ -257,4 +270,4 @@ public:
 #endif
 };
 
-#endif /* SOCKET_H */
+#endif /* ZNC_SOCKET_H */

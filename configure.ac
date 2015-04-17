@@ -7,7 +7,7 @@ AC_DEFUN([AC_PROG_CC], [m4_errprint(__file__:__line__[: Something is trying to u
 dnl Needed for AC_PATH_PROGS_FEATURE_CHECK which was added in 2.62
 AC_PREREQ([2.62])
 dnl Keep the version number in sync with main.h!
-AC_INIT([znc], [1.7.0])
+AC_INIT([znc], [1.7.x])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/znc.cpp])
 AC_LANG([C++])
@@ -93,6 +93,26 @@ case "${host_os}" in
 	;;
 	darwin*)
 		ISDARWIN=1
+
+		AC_ARG_VAR([USE_SYSTEM_OPENSSL],[set USE_SYSTEM_OPENSSL="true" to use the OpenSSL version provided by Mac OS X. Otherwise the Homebrew installed version is used if available. ])
+
+		AC_CHECK_PROG([BREW],brew, brew)
+		if test x$BREW = xbrew; then
+			dnl add default homebrew paths
+
+			icu4c_prefix=`$BREW --prefix icu4c`
+			export PKG_CONFIG_PATH="$icu4c_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+			python3_prefix=`$BREW --prefix python3`
+			python3_prefix=`find "$python3_prefix/" -name python3.pc`
+			python3_prefix=`dirname "$python3_prefix"`
+			export PKG_CONFIG_PATH="$python3_prefix:$PKG_CONFIG_PATH"
+
+			if test -z "$USE_SYSTEM_OPENSSL" -o "$USE_SYSTEM_OPENSSL" = "false"; then
+				openssl_prefix=`$BREW --prefix openssl`
+				export PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+			fi
+		fi
 	;;
 esac
 
@@ -321,7 +341,7 @@ if test "x$SSL" != "xno"; then
 			SSL=no
 			SSL_TEXT="no (openssl not usable)"
 		])
-		
+
 	fi
 
 	if test "x$SSL" = "xno" ; then
@@ -553,7 +573,7 @@ then
 
 	# This will need to be extended in the future, but I don't think
 	# it's a good idea to stuff a shitload of random stuff in here right now
-	for path in $TCL_DIR /usr/lib /usr/lib/tcl8.4 /usr/lib/tcl8.5
+	for path in $TCL_DIR /usr/lib /usr/lib/tcl8.4 /usr/lib/tcl8.5 /usr/lib/tcl8.6
 	do
 		file="${path}/tclConfig.sh"
 		AC_MSG_CHECKING([for ${file}])
@@ -598,8 +618,7 @@ AC_CACHE_CHECK([for GNU make], [ac_cv_path_GNUMAKE], [
 		]], [AC_MSG_ERROR([could not find GNU make])]
 	)
 ])
-GNUMAKE_DIRNAME=`AS_DIRNAME(["$ac_cv_path_GNUMAKE"])`
-GNUMAKE=`echo $ac_cv_path_GNUMAKE | $SED "s%$GNUMAKE_DIRNAME/%%"`
+GNUMAKE=`echo $ac_cv_path_GNUMAKE | $SED "s%.*/%%"`
 
 # this is in the end, for not trying to include it when it doesn't exist yet
 appendCXX "-include znc/zncconfig.h"
@@ -668,6 +687,11 @@ fi
 echo "charset:      $HAVE_ICU"
 echo "zlib:         $ZLIB_TEXT"
 echo "run from src: $RUNFROMSOURCE"
+echo
+echo "Used libraries:"
+echo "  openssl: $openssl_LIBS"
+echo "  python3: $python_LIBS"
+echo "  icu:     $icu_LIBS"
 echo
 echo "Now you can run \"$GNUMAKE\" to compile ZNC"
 

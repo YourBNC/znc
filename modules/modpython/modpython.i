@@ -104,6 +104,7 @@ class MCString : public std::map<CString, CString> {};
 %template(VListeners) std::vector<CListener*>;
 %template(BufLines) std::deque<CBufLine>;
 %template(VVString) std::vector<VCString>;
+%template(VClients) std::vector<CClient*>;
 
 %typemap(in) CString& {
 	String* p;
@@ -206,12 +207,12 @@ class CPyRetBool {
     PyObject* WriteBytes(PyObject* data) {
         if (!PyBytes_Check(data)) {
             PyErr_SetString(PyExc_TypeError, "socket.WriteBytes needs bytes as argument");
-            return NULL;
+            return nullptr;
         }
         char* buffer;
         Py_ssize_t length;
         if (-1 == PyBytes_AsStringAndSize(data, &buffer, &length)) {
-            return NULL;
+            return nullptr;
         }
         if ($self->Write(buffer, length)) {
             Py_RETURN_TRUE;

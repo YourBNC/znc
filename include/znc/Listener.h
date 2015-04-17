@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _LISTENER_H
-#define _LISTENER_H
+#ifndef ZNC_LISTENER_H
+#define ZNC_LISTENER_H
 
 #include <znc/zncconfig.h>
 #include <znc/Socket.h>
@@ -32,17 +32,20 @@ public:
 		ACCEPT_ALL
 	} EAcceptType;
 
-	CListener(unsigned short uPort, const CString& sBindHost, const CString& sURIPrefix, bool bSSL, EAddrType eAddr, EAcceptType eAccept) {
-		m_uPort = uPort;
-		m_sBindHost = sBindHost;
-		m_bSSL = bSSL;
-		m_eAddr = eAddr;
-		m_sURIPrefix = sURIPrefix;
-		m_pListener = NULL;
-		m_eAcceptType = eAccept;
+	CListener(unsigned short uPort, const CString& sBindHost, const CString& sURIPrefix, bool bSSL, EAddrType eAddr, EAcceptType eAccept)
+			: m_bSSL(bSSL),
+			  m_eAddr(eAddr),
+			  m_uPort(uPort),
+			  m_sBindHost(sBindHost),
+			  m_sURIPrefix(sURIPrefix),
+			  m_pListener(nullptr),
+			  m_eAcceptType(eAccept) {
 	}
 
 	~CListener();
+
+	CListener(const CListener&) = delete;
+	CListener& operator=(const CListener&) = delete;
 
 	// Getters
 	bool IsSSL() const { return m_bSSL; }
@@ -77,9 +80,9 @@ public:
 	CRealListener(CListener& listener) : CZNCSock(), m_Listener(listener) {}
 	virtual ~CRealListener();
 
-	virtual bool ConnectionFrom(const CString& sHost, unsigned short uPort);
-	virtual Csock* GetSockObj(const CString& sHost, unsigned short uPort);
-	virtual void SockError(int iErrno, const CString& sDescription);
+	bool ConnectionFrom(const CString& sHost, unsigned short uPort) override;
+	Csock* GetSockObj(const CString& sHost, unsigned short uPort) override;
+	void SockError(int iErrno, const CString& sDescription) override;
 
 private:
 	CListener& m_Listener;
@@ -89,12 +92,12 @@ class CIncomingConnection : public CZNCSock {
 public:
 	CIncomingConnection(const CString& sHostname, unsigned short uPort, CListener::EAcceptType eAcceptType, const CString& sURIPrefix);
 	virtual ~CIncomingConnection() {}
-	virtual void ReadLine(const CString& sData);
-	virtual void ReachedMaxBuffer();
+	void ReadLine(const CString& sData) override;
+	void ReachedMaxBuffer() override;
 
 private:
 	CListener::EAcceptType m_eAcceptType;
 	const CString m_sURIPrefix;
 };
 
-#endif // !_LISTENER_H
+#endif // !ZNC_LISTENER_H

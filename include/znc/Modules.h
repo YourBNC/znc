@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _MODULES_H
-#define _MODULES_H
+#ifndef ZNC_MODULES_H
+#define ZNC_MODULES_H
 
 #include <znc/zncconfig.h>
 #include <znc/WebModules.h>
@@ -48,16 +48,6 @@ class CModInfo;
 #error -
 #endif
 #endif
-
-typedef void* ModHandle;
-
-template<class M> void TModInfo(CModInfo& Info) {}
-
-template<class M> CModule* TModLoad(ModHandle p, CUser* pUser,
-		CIRCNetwork* pNetwork, const CString& sModName,
-		const CString& sModPath) {
-	return new M(p, pUser, pNetwork, sModName, sModPath);
-}
 
 #if HAVE_VISIBILITY
 # define MODULE_EXPORT __attribute__((__visibility__("default")))
@@ -97,8 +87,8 @@ template<class M> CModule* TModLoad(ModHandle p, CUser* pUser,
  */
 #define MODCONSTRUCTOR(CLASS) \
 	CLASS(ModHandle pDLL, CUser* pUser, CIRCNetwork* pNetwork, const CString& sModName, \
-			const CString& sModPath) \
-			: CModule(pDLL, pUser, pNetwork, sModName, sModPath)
+			const CString& sModPath, CModInfo::EModuleType eType) \
+			: CModule(pDLL, pUser, pNetwork, sModName, sModPath, eType)
 
 // User Module Macros
 /** This works exactly like MODULEDEFS, but for user modules. */
@@ -142,6 +132,9 @@ public:
 
 	virtual ~CTimer();
 
+	CTimer(const CTimer&) = delete;
+	CTimer& operator=(const CTimer&) = delete;
+
 	// Setters
 	void SetModule(CModule* p);
 	void SetDescription(const CString& s);
@@ -162,8 +155,7 @@ typedef void (*FPTimer_t)(CModule *, CFPTimer *);
 class CFPTimer : public CTimer {
 public:
 	CFPTimer(CModule* pModule, unsigned int uInterval, unsigned int uCycles, const CString& sLabel, const CString& sDescription)
-		: CTimer(pModule, uInterval, uCycles, sLabel, sDescription) {
-		m_pFBCallback = NULL;
+		: CTimer(pModule, uInterval, uCycles, sLabel, sDescription), m_pFBCallback(nullptr) {
 	}
 
 	virtual ~CFPTimer() {}
@@ -171,7 +163,7 @@ public:
 	void SetFPCallback(FPTimer_t p) { m_pFBCallback = p; }
 
 protected:
-	virtual void RunJob() {
+	void RunJob() override {
 		if (m_pFBCallback) {
 			m_pFBCallback(m_pModule, this);
 		}
@@ -191,6 +183,9 @@ public:
 	}
 	virtual ~CModuleJob();
 
+	CModuleJob(const CModuleJob&) = delete;
+	CModuleJob& operator=(const CModuleJob&) = delete;
+
 	// Getters
 	CModule* GetModule() const { return m_pModule; }
 	const CString& GetName() const { return m_sName; }
@@ -204,25 +199,30 @@ protected:
 };
 #endif
 
+typedef void* ModHandle;
+
 class CModInfo {
 public:
-	typedef CModule* (*ModLoader)(ModHandle p, CUser* pUser, CIRCNetwork* pNetwork, const CString& sModName, const CString& sModPath);
-
 	typedef enum {
 		GlobalModule,
 		UserModule,
 		NetworkModule
 	} EModuleType;
 
-	CModInfo() {
-		m_fLoader = NULL;
-		m_bHasArgs = false;
+	typedef CModule* (*ModLoader)(ModHandle p, CUser* pUser, CIRCNetwork* pNetwork, const CString& sModName, const CString& sModPath, EModuleType eType);
+
+	CModInfo() : CModInfo("", "", NetworkModule) {
 	}
-	CModInfo(const CString& sName, const CString& sPath, EModuleType eType) {
-		m_sName = sName;
-		m_sPath = sPath;
-		m_fLoader = NULL;
-		m_bHasArgs = false;
+	CModInfo(const CString& sName, const CString& sPath, EModuleType eType)
+			: m_seType(),
+			  m_eDefaultType(eType),
+			  m_sName(sName),
+			  m_sPath(sPath),
+			  m_sDescription(""),
+			  m_sWikiPage(""),
+			  m_sArgsHelpText(""),
+			  m_bHasArgs(false),
+			  m_fLoader(nullptr) {
 	}
 	~CModInfo() {}
 
@@ -280,6 +280,14 @@ protected:
 	bool            m_bHasArgs;
 	ModLoader       m_fLoader;
 };
+
+template<class M> void TModInfo(CModInfo& Info) {}
+
+template<class M> CModule* TModLoad(ModHandle p, CUser* pUser,
+		CIRCNetwork* pNetwork, const CString& sModName,
+		const CString& sModPath, CModInfo::EModuleType eType) {
+	return new M(p, pUser, pNetwork, sModName, sModPath, eType);
+}
 
 /** A helper class for handling commands in modules. */
 class CModCommand {
@@ -351,8 +359,11 @@ private:
 class CModule {
 public:
 	CModule(ModHandle pDLL, CUser* pUser, CIRCNetwork* pNetwork, const CString& sModName,
-			const CString& sDataDir);
+			const CString& sDataDir, CModInfo::EModuleType eType = CModInfo::NetworkModule); // TODO: remove default value in ZNC 2.x
 	virtual ~CModule();
+
+	CModule(const CModule&) = delete;
+	CModule& operator=(const CModule&) = delete;
 
 	/** This enum is just used for return from module hooks. Based on this
 	 *  return, ZNC then decides what to do with the event which caused the
@@ -500,7 +511,7 @@ public:
 	virtual EModRet OnBroadcast(CString& sMessage);
 
 	/** This module hook is called when a user mode on a channel changes.
-	 *  @param pOpNick The nick who sent the mode change, or NULL if set by server.
+	 *  @param pOpNick The nick who sent the mode change, or nullptr if set by server.
 	 *  @param Nick The nick whose channel mode changes.
 	 *  @param Channel The channel on which the user mode is changed.
 	 *  @param uMode The mode character that is changed, e.g. '@' for op.
@@ -525,7 +536,7 @@ public:
 	virtual void OnDevoice2(const CNick* pOpNick, const CNick& Nick, CChan& Channel, bool bNoChange);
 	virtual void OnDevoice(const CNick& OpNick, const CNick& Nick, CChan& Channel, bool bNoChange);
 	/** Called on an individual channel mode change.
-	 *  @param pOpNick The nick who changes the channel mode, or NULL if set by server.
+	 *  @param pOpNick The nick who changes the channel mode, or nullptr if set by server.
 	 *  @param Channel The channel whose mode is changed.
 	 *  @param uMode The mode character that is changed.
 	 *  @param sArg The argument to the mode character, if any.
@@ -536,7 +547,7 @@ public:
 	virtual void OnMode(const CNick& OpNick, CChan& Channel, char uMode, const CString& sArg, bool bAdded, bool bNoChange);
 	/** Called on any channel mode change. This is called before the more
 	 *  detailed mode hooks like e.g. OnOp() and OnMode().
-	 *  @param pOpNick The nick who changes the channel mode, or NULL if set by server.
+	 *  @param pOpNick The nick who changes the channel mode, or nullptr if set by server.
 	 *  @param Channel The channel whose mode is changed.
 	 *  @param sModes The raw mode change, e.g. "+s-io".
 	 *  @param sArgs All arguments to the mode change from sModes.
@@ -944,7 +955,7 @@ public:
 	bool AddCommand(const CString& sCmd, const CString& sArgs, const CString& sDesc, std::function<void(const CString& sLine)> func);
 	/// @return True if the command was successfully removed.
 	bool RemCommand(const CString& sCmd);
-	/// @return The CModCommand instance or NULL if none was found.
+	/// @return The CModCommand instance or nullptr if none was found.
 	const CModCommand* FindCommand(const CString& sCmd) const;
 	/** This function tries to dispatch the given command via the correct
 	 * instance of CModCommand. Before this can be called, commands have to
@@ -990,12 +1001,12 @@ public:
 	const CString& GetModPath() const { return m_sModPath; }
 
 	/** @returns For user modules this returns the user for which this
-	 *           module was loaded. For global modules this returns NULL,
+	 *           module was loaded. For global modules this returns nullptr,
 	 *           except when we are in a user-specific module hook in which
 	 *           case this is the user pointer.
 	 */
 	CUser* GetUser() const { return m_pUser; }
-	/** @returns NULL except when we are in a client-specific module hook in
+	/** @returns nullptr except when we are in a client-specific module hook in
 	 *           which case this is the client for which the hook is called.
 	 */
 	CIRCNetwork* GetNetwork() const { return m_pNetwork; }
@@ -1126,6 +1137,9 @@ class CModules : public std::vector<CModule*> {
 public:
 	CModules();
 	~CModules();
+
+	CModules(const CModules&) = default;
+	CModules& operator=(const CModules&) = default;
 
 	void SetUser(CUser* pUser) { m_pUser = pUser; }
 	void SetNetwork(CIRCNetwork* pNetwork) { m_pNetwork = pNetwork; }
@@ -1266,4 +1280,4 @@ protected:
 	CClient*      m_pClient;
 };
 
-#endif // !_MODULES_H
+#endif // !ZNC_MODULES_H

@@ -51,23 +51,23 @@ constexpr const char* szDefaultDH2048 =
 	"-----END DH PARAMETERS-----\n";
 
 void CUtils::GenerateCert(FILE *pOut, const CString& sHost) {
-	EVP_PKEY *pKey = NULL;
-	X509 *pCert = NULL;
-	X509_NAME *pName = NULL;
+	EVP_PKEY *pKey = nullptr;
+	X509 *pCert = nullptr;
+	X509_NAME *pName = nullptr;
 	const int days = 365;
 	const int years = 10;
 
-	unsigned int uSeed = (unsigned int)time(NULL);
+	unsigned int uSeed = (unsigned int)time(nullptr);
 	int serial = (rand_r(&uSeed) % 9999);
 
-	RSA *pRSA = RSA_generate_key(2048, 0x10001, NULL, NULL);
+	RSA *pRSA = RSA_generate_key(2048, 0x10001, nullptr, nullptr);
 	if ((pKey = EVP_PKEY_new())) {
 		if (!EVP_PKEY_assign_RSA(pKey, pRSA)) {
 			EVP_PKEY_free(pKey);
 			return;
 		}
 
-		PEM_write_RSAPrivateKey(pOut, pRSA, NULL, NULL, 0, NULL, NULL);
+		PEM_write_RSAPrivateKey(pOut, pRSA, nullptr, nullptr, 0, nullptr, nullptr);
 
 		if (!(pCert = X509_new())) {
 			EVP_PKEY_free(pKey);
@@ -83,7 +83,7 @@ void CUtils::GenerateCert(FILE *pOut, const CString& sHost) {
 		pName = X509_get_subject_name(pCert);
 
 		const char *pLogName = getenv("LOGNAME");
-		const char *pHostName = NULL;
+		const char *pHostName = nullptr;
 
 		if (!sHost.empty()) {
 			pHostName = sHost.c_str();
@@ -270,7 +270,7 @@ bool CUtils::GetInput(const CString& sPrompt, CString& sRet, const CString& sDef
 	PrintPrompt(sPrompt + sExtra);
 	char szBuf[1024];
 	memset(szBuf, 0, 1024);
-	if (fgets(szBuf, 1024, stdin) == NULL) {
+	if (fgets(szBuf, 1024, stdin) == nullptr) {
 		// Reading failed (Error? EOF?)
 		PrintError("Error while reading from stdin. Exiting...");
 		exit(-1);
@@ -464,13 +464,12 @@ namespace {
 	void FillTimezones(const CString& sPath, SCString& result, const CString& sPrefix) {
 		CDir Dir;
 		Dir.Fill(sPath);
-		for (unsigned int a = 0; a < Dir.size(); ++a) {
-			CFile& File = *Dir[a];
-			CString sName = File.GetShortName();
-			CString sFile = File.GetLongName();
+		for (CFile* pFile : Dir) {
+			CString sName = pFile->GetShortName();
+			CString sFile = pFile->GetLongName();
 			if (sName == "posix" || sName == "right") continue; // these 2 dirs contain the same filenames
 			if (sName.Right(4) == ".tab" || sName == "posixrules" || sName == "localtime") continue;
-			if (File.IsDir()) {
+			if (pFile->IsDir()) {
 				if (sName == "Etc") {
 					FillTimezones(sFile, result, sPrefix);
 				} else {
@@ -502,7 +501,7 @@ SCString CUtils::GetEncodings() {
 			for (int st = 0; st < ucnv_countStandards(); ++st) {
 				const char* pStdName = ucnv_getStandard(st, e);
 				icu::LocalUEnumerationPointer ue(ucnv_openStandardNames(pConvName, pStdName, e));
-				while (const char* pStdConvNameEnum = uenum_next(ue.getAlias(), NULL, e)) {
+				while (const char* pStdConvNameEnum = uenum_next(ue.getAlias(), nullptr, e)) {
 					ssResult.insert(pStdConvNameEnum);
 				}
 			}
@@ -518,9 +517,9 @@ MCString CUtils::GetMessageTags(const CString& sLine) {
 		sLine.Token(0).TrimPrefix_n("@").Split(";", vsTags, false);
 
 		MCString mssTags;
-		for (VCString::const_iterator it = vsTags.begin(); it != vsTags.end(); ++it) {
-			CString sKey = it->Token(0, false, "=", true);
-			CString sValue = it->Token(1, true, "=", true);
+		for (const CString& sTag : vsTags) {
+			CString sKey = sTag.Token(0, false, "=", true);
+			CString sValue = sTag.Token(1, true, "=", true);
 			mssTags[sKey] = sValue.Escape(CString::EMSGTAG, CString::CString::EASCII);
 		}
 		return mssTags;
@@ -535,30 +534,26 @@ void CUtils::SetMessageTags(CString& sLine, const MCString& mssTags) {
 
 	if (!mssTags.empty()) {
 		CString sTags;
-		for (MCString::const_iterator it = mssTags.begin(); it != mssTags.end(); ++it) {
+		for (const auto& it : mssTags) {
 			if (!sTags.empty()) {
 				sTags += ";";
 			}
-			sTags += it->first;
-			if (!it->second.empty())
-				sTags += "=" + it->second.Escape_n(CString::EMSGTAG);
+			sTags += it.first;
+			if (!it.second.empty())
+				sTags += "=" + it.second.Escape_n(CString::EMSGTAG);
 		}
 		sLine = "@" + sTags + " " + sLine;
 	}
 }
 
-bool CTable::AddColumn(const CString& sName, bool bWrappable) {
-	for (unsigned int a = 0; a < m_vsHeaders.size(); a++) {
-		if (m_vsHeaders[a].Equals(sName)) {
+bool CTable::AddColumn(const CString& sName) {
+	for (const CString& sHeader : m_vsHeaders) {
+		if (sHeader.Equals(sName)) {
 			return false;
 		}
 	}
 
 	m_vsHeaders.push_back(sName);
-	m_vuMaxWidths.push_back(sName.size());
-	// TODO: Maybe headers can be wrapped too?
-	m_vuMinWidths.push_back(sName.size());
-	m_vbWrappable.push_back(bWrappable);
 
 	return true;
 }
@@ -590,27 +585,6 @@ bool CTable::SetCell(const CString& sColumn, const CString& sValue, size_type uR
 
 	(*this)[uRowIdx][uColIdx] = sValue;
 
-	if (sValue.length() > m_vuMaxWidths[uColIdx]) {
-		m_vuMaxWidths[uColIdx] = sValue.length();
-	}
-
-	if (m_vbWrappable[uColIdx]) {
-		VCString vsWords;
-		sValue.Split(" ", vsWords);
-		size_type uMaxWord = 0;
-		for (const CString& sWord : vsWords) {
-			if (sWord.length() > uMaxWord) {
-				uMaxWord = sWord.length();
-			}
-		}
-		// We can't shrink column further than the longest word in it
-		if (uMaxWord > m_vuMinWidths[uColIdx]) {
-			m_vuMinWidths[uColIdx] = uMaxWord;
-		}
-	} else {
-		m_vuMinWidths[uColIdx] = m_vuMaxWidths[uColIdx];
-	}
-	
 	return true;
 }
 
@@ -629,122 +603,18 @@ bool CTable::GetLine(unsigned int uIdx, CString& sLine) const {
 }
 
 VCString CTable::Render() const {
-	size_type uTotalWidth = 1;  // '|'
-	for (size_type uWidth : m_vuMaxWidths) {
-		uTotalWidth += uWidth + 3;  // '|', ' 'x2
-	}
-
-	std::vector<size_type> vuWidth = m_vuMaxWidths;
-
-	std::map<int, int> miColumnSpace;
-	for (unsigned int i = 0; i < m_vsHeaders.size(); ++i) {
-		int iSpace = m_vuMaxWidths[i] - m_vuMinWidths[i];
-		if (iSpace > 0) {
-			miColumnSpace[i] = iSpace;
-		}
-	}
-
-	// Not very efficient algorithm, and doesn't produce very good results...
-	while (uTotalWidth > m_uPreferredWidth) {
-		std::vector<int> viToErase;
-		for (auto& i : miColumnSpace) {
-			uTotalWidth--;
-			i.second--;
-			vuWidth[i.first]--;
-			if (i.second == 0) {
-				viToErase.push_back(i.first);
-			}
-			if (uTotalWidth == m_uPreferredWidth) {
-				break;
-			}
-		}
-		for (int iCol : viToErase) {
-			miColumnSpace.erase(iCol);
-		}
-		if (miColumnSpace.empty()) {
-			// Every column is at its minimum width now, but total width is still more than preferred width
-			break;
-		}
-	}
-
-	CString sHorizontal;
-	{
-		std::ostringstream ssLine;
-		ssLine << std::setfill('-');
-		ssLine << "+";
-		for (size_type uWidth : vuWidth) {
-			ssLine << std::setw(uWidth + 2) << std::left << "-";
-			ssLine << "+";
-		}
-		sHorizontal = ssLine.str();
-	}
 	VCString vsOutput;
-	vsOutput.emplace_back(sHorizontal.Replace_n("-", "="));
-	{
-		std::ostringstream ssLine;
-		ssLine << "|";
-		for (unsigned int iCol = 0; iCol < vuWidth.size(); ++iCol) {
-			ssLine << " ";
-			ssLine << std::setw(vuWidth[iCol]) << std::left;
-			ssLine << m_vsHeaders[iCol] << " |";
-		}
-		vsOutput.emplace_back(ssLine.str());
-	}
-	vsOutput.emplace_back(vsOutput[0]);
+	vsOutput.reserve((m_vsHeaders.size() + 1) * size() + 1);
 	for (const VCString& vsRow : *this) {
-		// Wrap words
-		std::vector<VCString> vvsColumns;
-		vvsColumns.reserve(m_vsHeaders.size());
-		unsigned int uRowNum = 1;
-		for (unsigned int iCol = 0; iCol < vuWidth.size(); ++iCol) {
-			if (m_vbWrappable[iCol]) {
-				vvsColumns.emplace_back(WrapWords(vsRow[iCol], vuWidth[iCol]));
-			} else {
-				vvsColumns.push_back({vsRow[iCol]});
-			}
-			if (vvsColumns.back().size() > uRowNum) {
-				uRowNum = vvsColumns.back().size();
+		vsOutput.emplace_back("------");
+		for (unsigned int i = 0; i < m_vsHeaders.size(); ++i) {
+			if (!vsRow[i].empty()) {
+				vsOutput.emplace_back(m_vsHeaders[i] + ": " + vsRow[i]);
 			}
 		}
-		CString sEmpty;
-		for (size_type uCurrentLine = 0; uCurrentLine < uRowNum; ++uCurrentLine) {
-			std::ostringstream ssLine;
-			ssLine << "|";
-			for (unsigned int iCol = 0; iCol < vvsColumns.size(); ++iCol) {
-				const CString& sData = uCurrentLine < vvsColumns[iCol].size() ? vvsColumns[iCol][uCurrentLine] : sEmpty;
-				ssLine << " ";
-				ssLine << std::setw(vuWidth[iCol]) << std::left;
-				ssLine << sData << " |";
-			}
-			vsOutput.emplace_back(ssLine.str());
-		}
-		vsOutput.emplace_back(sHorizontal);
 	}
-	vsOutput.pop_back();
-	vsOutput.emplace_back(vsOutput[0]);
+	vsOutput.emplace_back("------");
 	return vsOutput;
-}
-
-VCString CTable::WrapWords(const CString& s, size_type uWidth) {
-	VCString vsWords;
-	s.Split(" ", vsWords);
-	VCString vsResult;
-	vsResult.emplace_back("");
-	for (const CString& sWord : vsWords) {
-		size_type uOldLen = vsResult.back().length();
-		if (uOldLen != 0) {
-			uOldLen++;  // ' '
-		}
-		if (uOldLen + sWord.length() > uWidth) {
-			vsResult.emplace_back(sWord);
-		} else {
-			if (uOldLen != 0) {
-				vsResult.back() += " ";
-			}
-			vsResult.back() += sWord;
-		}
-	}
-	return vsResult;
 }
 
 unsigned int CTable::GetColumnIndex(const CString& sName) const {
@@ -758,27 +628,19 @@ unsigned int CTable::GetColumnIndex(const CString& sName) const {
 	return (unsigned int) -1;
 }
 
-CString::size_type CTable::GetColumnWidth(unsigned int uIdx) const {
-	if (uIdx >= m_vsHeaders.size()) {
-		return 0;
-	}
-	return m_vuMaxWidths[uIdx];
-}
-
 void CTable::Clear() {
 	clear();
 	m_vsHeaders.clear();
-	m_vuMaxWidths.clear();
-	m_vuMinWidths.clear();
-	m_vbWrappable.clear();
 	m_vsOutput.clear();
 }
 
 #ifdef HAVE_LIBSSL
-CBlowfish::CBlowfish(const CString & sPassword, int iEncrypt, const CString & sIvec) {
-	m_iEncrypt = iEncrypt;
-	m_ivec = (unsigned char *)calloc(sizeof(unsigned char), 8);
-	m_num = 0;
+CBlowfish::CBlowfish(const CString & sPassword, int iEncrypt, const CString & sIvec)
+		: m_ivec((unsigned char *)calloc(sizeof(unsigned char), 8)),
+		  m_bkey(),
+		  m_iEncrypt(iEncrypt),
+		  m_num(0)
+{
 
 	if (sIvec.length() >= 8) {
 		memcpy(m_ivec, sIvec.data(), 8);

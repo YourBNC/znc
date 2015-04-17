@@ -39,7 +39,7 @@ public:
 
 	virtual ~CSSLClientCertMod() {}
 
-	virtual bool OnBoot() override {
+	bool OnBoot() override {
 		const vector<CListener*>& vListeners = CZNC::Get().GetListeners();
 		vector<CListener*>::const_iterator it;
 
@@ -51,7 +51,7 @@ public:
 		for (MCString::const_iterator it1 = BeginNV(); it1 != EndNV(); ++it1) {
 			VCString vsKeys;
 
-			if (CZNC::Get().FindUser(it1->first) == NULL) {
+			if (CZNC::Get().FindUser(it1->first) == nullptr) {
 				DEBUG("Unknown user in saved data [" + it1->first + "]");
 				continue;
 			}
@@ -65,11 +65,11 @@ public:
 		return true;
 	}
 
-	virtual void OnPostRehash() override {
+	void OnPostRehash() override {
 		OnBoot();
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sMessage) override {
+	bool OnLoad(const CString& sArgs, CString& sMessage) override {
 		OnBoot();
 
 		return true;
@@ -101,12 +101,12 @@ public:
 		return pair.second;
 	}
 
-	virtual EModRet OnLoginAttempt(std::shared_ptr<CAuthBase> Auth) override {
+	EModRet OnLoginAttempt(std::shared_ptr<CAuthBase> Auth) override {
 		const CString sUser = Auth->GetUsername();
 		Csock *pSock = Auth->GetSocket();
 		CUser *pUser = CZNC::Get().FindUser(sUser);
 
-		if (pSock == NULL || pUser == NULL)
+		if (pSock == nullptr || pUser == nullptr)
 			return CONTINUE;
 
 		const CString sPubKey = GetKey(pSock);
@@ -236,9 +236,9 @@ public:
 		}
 	}
 
-	virtual CString GetWebMenuTitle() override { return "certauth"; }
+	CString GetWebMenuTitle() override { return "certauth"; }
 
-	virtual bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
+	bool OnWebRequest(CWebSock& WebSock, const CString& sPageName, CTemplate& Tmpl) override {
 		CUser *pUser = WebSock.GetSession()->GetUser();
 
 		if (sPageName == "index") {

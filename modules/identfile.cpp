@@ -35,8 +35,8 @@ public:
 			"<format>");
 		AddCommand("Show",      static_cast<CModCommand::ModCmdFunc>(&CIdentFileModule::Show));
 
-		m_pISpoofLockFile = NULL;
-		m_pIRCSock = NULL;
+		m_pISpoofLockFile = nullptr;
+		m_pIRCSock = nullptr;
 	}
 
 	virtual ~CIdentFileModule() {
@@ -94,14 +94,14 @@ public:
 	}
 
 	bool WriteISpoof() {
-		if (m_pISpoofLockFile != NULL) {
+		if (m_pISpoofLockFile != nullptr) {
 			return false;
 		}
 
 		m_pISpoofLockFile = new CFile;
 		if (!m_pISpoofLockFile->TryExLock(GetNV("File"), O_RDWR | O_CREAT)) {
 			delete m_pISpoofLockFile;
-			m_pISpoofLockFile = NULL;
+			m_pISpoofLockFile = nullptr;
 			return false;
 		}
 
@@ -112,7 +112,7 @@ public:
 
 		if (!m_pISpoofLockFile->Seek(0) || !m_pISpoofLockFile->Truncate()) {
 			delete m_pISpoofLockFile;
-			m_pISpoofLockFile = NULL;
+			m_pISpoofLockFile = nullptr;
 			return false;
 		}
 
@@ -135,21 +135,21 @@ public:
 		DEBUG("Releasing ident spoof for user/network [" + (m_pIRCSock ? m_pIRCSock->GetNetwork()->GetUser()->GetUserName() + "/" +
 				m_pIRCSock->GetNetwork()->GetName() : "<no user/network>") + "]");
 
-		SetIRCSock(NULL);
+		SetIRCSock(nullptr);
 
-		if (m_pISpoofLockFile != NULL) {
+		if (m_pISpoofLockFile != nullptr) {
 			if (m_pISpoofLockFile->Seek(0) && m_pISpoofLockFile->Truncate()) {
 				m_pISpoofLockFile->Write(m_sOrigISpoof);
 			}
 
 			delete m_pISpoofLockFile;
-			m_pISpoofLockFile = NULL;
+			m_pISpoofLockFile = nullptr;
 		}
 	}
 
-	virtual bool OnLoad(const CString& sArgs, CString& sMessage) override {
-		m_pISpoofLockFile = NULL;
-		m_pIRCSock = NULL;
+	bool OnLoad(const CString& sArgs, CString& sMessage) override {
+		m_pISpoofLockFile = nullptr;
+		m_pIRCSock = nullptr;
 
 		if (GetNV("Format").empty()) {
 			SetNV("Format", "global { reply \"%ident%\" }");
@@ -162,8 +162,8 @@ public:
 		return true;
 	}
 
-	virtual EModRet OnIRCConnecting(CIRCSock *pIRCSock) override {
-		if (m_pISpoofLockFile != NULL) {
+	EModRet OnIRCConnecting(CIRCSock *pIRCSock) override {
+		if (m_pISpoofLockFile != nullptr) {
 			DEBUG("Aborting connection, ident spoof lock file exists");
 			PutModule("Aborting connection, another user or network is currently connecting and using the ident spoof file");
 			return HALTCORE;
@@ -179,19 +179,19 @@ public:
 		return CONTINUE;
 	}
 
-	virtual void OnIRCConnected() override {
+	void OnIRCConnected() override {
 		if (m_pIRCSock == GetNetwork()->GetIRCSock()) {
 			ReleaseISpoof();
 		}
 	}
 
-	virtual void OnIRCConnectionError(CIRCSock *pIRCSock) override {
+	void OnIRCConnectionError(CIRCSock *pIRCSock) override {
 		if (m_pIRCSock == pIRCSock) {
 			ReleaseISpoof();
 		}
 	}
 
-	virtual void OnIRCDisconnected() override {
+	void OnIRCDisconnected() override {
 		if (m_pIRCSock == GetNetwork()->GetIRCSock()) {
 			ReleaseISpoof();
 		}

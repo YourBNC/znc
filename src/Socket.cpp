@@ -26,6 +26,7 @@
 #include <unicode/ucnv_cb.h>
 #endif
 
+#ifdef HAVE_LIBSSL
 // Copypasted from https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28default.29 at 22 Dec 2014
 static CString ZNC_DefaultCipher() {
     return
@@ -36,8 +37,9 @@ static CString ZNC_DefaultCipher() {
         "DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:"
         "AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA";
 }
+#endif
 
-CZNCSock::CZNCSock(int timeout) : Csock(timeout) {
+CZNCSock::CZNCSock(int timeout) : Csock(timeout), m_HostToVerifySSL(""), m_ssTrustedFingerprints(), m_ssCertVerificationErrors() {
 #ifdef HAVE_LIBSSL
 	DisableSSLCompression();
 	FollowSSLCipherServerPreference();
@@ -51,7 +53,7 @@ CZNCSock::CZNCSock(int timeout) : Csock(timeout) {
 #endif
 }
 
-CZNCSock::CZNCSock(const CString& sHost, u_short port, int timeout) : Csock(sHost, port, timeout) {
+CZNCSock::CZNCSock(const CString& sHost, u_short port, int timeout) : Csock(sHost, port, timeout), m_HostToVerifySSL(""), m_ssTrustedFingerprints(), m_ssCertVerificationErrors() {
 #ifdef HAVE_LIBSSL
 	DisableSSLCompression();
 	FollowSSLCipherServerPreference();
@@ -164,7 +166,7 @@ public:
 		Add(CThreadPool::Get().getReadFD(), ECT_Read);
 	}
 
-	virtual bool FDsThatTriggered(const std::map<int, short>& miiReadyFds) {
+	bool FDsThatTriggered(const std::map<int, short>& miiReadyFds) override {
 		if (miiReadyFds.find(CThreadPool::Get().getReadFD())->second) {
 			CThreadPool::Get().handlePipeReadable();
 		}
@@ -183,7 +185,7 @@ void CSockManager::CDNSJob::runThread() {
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
 		hints.ai_flags = AI_ADDRCONFIG;
-		iRes = getaddrinfo(sHostname.c_str(), NULL, &hints, &aiResult);
+		iRes = getaddrinfo(sHostname.c_str(), nullptr, &hints, &aiResult);
 		if (EAGAIN != iRes) {
 			break;
 		}
@@ -201,9 +203,9 @@ void CSockManager::CDNSJob::runMain() {
 	if (0 != this->iRes) {
 		DEBUG("Error in threaded DNS: " << gai_strerror(this->iRes));
 		if (this->aiResult) {
-			DEBUG("And aiResult is not NULL...");
+			DEBUG("And aiResult is not nullptr...");
 		}
-		this->aiResult = NULL; // just for case. Maybe to call freeaddrinfo()?
+		this->aiResult = nullptr; // just for case. Maybe to call freeaddrinfo()?
 	}
 	pManager->SetTDNSThreadFinished(this->task, this->bBind, this->aiResult);
 }
@@ -214,8 +216,6 @@ void CSockManager::StartTDNSThread(TDNSTask* task, bool bBind) {
 	arg->sHostname = sHostname;
 	arg->task      = task;
 	arg->bBind     = bBind;
-	arg->iRes      = 0;
-	arg->aiResult  = NULL;
 	arg->pManager  = this;
 
 	CThreadPool::Get().addJob(arg);
@@ -264,7 +264,7 @@ void CSockManager::SetTDNSThreadFinished(TDNSTask* task, bool bBind, addrinfo* a
 	SCString ssTargets6;
 	for (addrinfo* ai = task->aiTarget; ai; ai = ai->ai_next) {
 		char s[INET6_ADDRSTRLEN] = {};
-		getnameinfo(ai->ai_addr, ai->ai_addrlen, s, sizeof(s), NULL, 0, NI_NUMERICHOST);
+		getnameinfo(ai->ai_addr, ai->ai_addrlen, s, sizeof(s), nullptr, 0, NI_NUMERICHOST);
 		switch (ai->ai_family) {
 			case AF_INET:
 				ssTargets4.insert(s);
@@ -280,7 +280,7 @@ void CSockManager::SetTDNSThreadFinished(TDNSTask* task, bool bBind, addrinfo* a
 	SCString ssBinds6;
 	for (addrinfo* ai = task->aiBind; ai; ai = ai->ai_next) {
 		char s[INET6_ADDRSTRLEN] = {};
-		getnameinfo(ai->ai_addr, ai->ai_addrlen, s, sizeof(s), NULL, 0, NI_NUMERICHOST);
+		getnameinfo(ai->ai_addr, ai->ai_addrlen, s, sizeof(s), nullptr, 0, NI_NUMERICHOST);
 		switch (ai->ai_family) {
 			case AF_INET:
 				ssBinds4.insert(s);
@@ -369,13 +369,9 @@ void CSockManager::Connect(const CString& sHostname, u_short iPort, const CStrin
 	task->bSSL        = bSSL;
 	task->sBindhost   = sBindHost;
 	task->pcSock      = pcSock;
-	task->aiTarget    = NULL;
-	task->aiBind      = NULL;
-	task->bDoneTarget = false;
 	if (sBindHost.empty()) {
 		task->bDoneBind = true;
 	} else {
-		task->bDoneBind = false;
 		StartTDNSThread(task, true);
 	}
 	StartTDNSThread(task, false);
@@ -404,24 +400,22 @@ void CSockManager::FinishConnect(const CString& sHostname, u_short iPort, const 
 
 
 /////////////////// CSocket ///////////////////
-CSocket::CSocket(CModule* pModule) : CZNCSock() {
-	m_pModule = pModule;
+CSocket::CSocket(CModule* pModule) : CZNCSock(), m_pModule(pModule) {
 	if (m_pModule) m_pModule->AddSocket(this);
 	EnableReadLine();
 	SetMaxBufferThreshold(10240);
 }
 
-CSocket::CSocket(CModule* pModule, const CString& sHostname, unsigned short uPort, int iTimeout) : CZNCSock(sHostname, uPort, iTimeout) {
-	m_pModule = pModule;
+CSocket::CSocket(CModule* pModule, const CString& sHostname, unsigned short uPort, int iTimeout) : CZNCSock(sHostname, uPort, iTimeout), m_pModule(pModule) {
 	if (m_pModule) m_pModule->AddSocket(this);
 	EnableReadLine();
 	SetMaxBufferThreshold(10240);
 }
 
 CSocket::~CSocket() {
-	CUser *pUser = NULL;
+	CUser *pUser = nullptr;
 
-	// CWebSock could cause us to have a NULL pointer here
+	// CWebSock could cause us to have a nullptr pointer here
 	if (m_pModule) {
 		pUser = m_pModule->GetUser();
 		m_pModule->UnlinkSocket(this);
