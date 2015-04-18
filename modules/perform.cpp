@@ -14,7 +14,52 @@
  * limitations under the License.
  */
 
+#include <znc/User.h>
+#include <znc/Client.h>
 #include <znc/IRCNetwork.h>
+
+#define CALLMOD(MOD, CLIENT, USER, NETWORK, FUNC) {  \
+	CModule *pModule = nullptr;  \
+	if (NETWORK && (pModule = (NETWORK)->GetModules().FindModule(MOD))) {  \
+		try {  \
+			pModule->SetClient(CLIENT);  \
+			pModule->FUNC;  \
+			pModule->SetClient(nullptr);  \
+		} catch (const CModule::EModException& e) {  \
+			if (e == CModule::UNLOAD) {  \
+				(NETWORK)->GetModules().UnloadModule(MOD);  \
+			}  \
+		}  \
+	} else if ((pModule = (USER)->GetModules().FindModule(MOD))) {  \
+		try {  \
+			pModule->SetClient(CLIENT);  \
+			pModule->SetNetwork(NETWORK);  \
+			pModule->FUNC;  \
+			pModule->SetClient(nullptr);  \
+			pModule->SetNetwork(nullptr);  \
+		} catch (const CModule::EModException& e) {  \
+			if (e == CModule::UNLOAD) {  \
+				(USER)->GetModules().UnloadModule(MOD);  \
+			}  \
+		}  \
+	} else if ((pModule = CZNC::Get().GetModules().FindModule(MOD))) {  \
+		try {  \
+			pModule->SetClient(CLIENT);  \
+			pModule->SetNetwork(NETWORK);  \
+			pModule->SetUser(USER);  \
+			pModule->FUNC;  \
+			pModule->SetClient(nullptr);  \
+			pModule->SetNetwork(nullptr);  \
+			pModule->SetUser(nullptr);  \
+		} catch (const CModule::EModException& e) {  \
+			if (e == CModule::UNLOAD) {  \
+					CZNC::Get().GetModules().UnloadModule(MOD);  \
+			}  \
+		}  \
+	} else {  \
+		PutStatus("No such module [" + MOD + "]");  \
+	}  \
+}
 
 class CPerform : public CModule {
 	void Add(const CString& sCommand) {
@@ -128,8 +173,41 @@ public:
 	}
 
 	void OnIRCConnected() override {
-		for (VCString::const_iterator it = m_vPerform.begin(); it != m_vPerform.end(); ++it) {
-			PutIRC(ExpandString(*it));
+		for (CString sUnexpandedLine: m_vPerform) {
+			CString sLine = ExpandString(sUnexpandedLine);
+			DEBUG("(" << GetUser()->GetUserName() << "/" << GetNetwork()->GetName() << ") PERFORM [" << sLine << "]");
+			CString sCommand = sLine.Token(0).AsUpper();
+			if (sCommand.Equals("ZNC") || sCommand.Equals("BNC")) {
+				CString sTarget = sLine.Token(1);
+				CString sModCommand;
+				if (sTarget.TrimPrefix(GetUser()->GetStatusPrefix())) {
+					sModCommand = sLine.Token(2, true);
+				} else {
+					sTarget  = "status";
+					sModCommand = sLine.Token(1, true);
+				}
+				if (sTarget.Equals("status")) {
+					if (sModCommand.empty())
+						PutStatus("Empty /znc command.");
+					else {
+						CClient* client = GetClient();
+						if (!client)
+						{
+							//It's a little hacky. But it kinda works.
+							client = new CClient();
+							client->SetNetwork(GetNetwork(), false, false);
+							client->SetUser(GetUser());
+						}
+						client->UserCommand(sModCommand);
+					}
+				} else {
+					if (sModCommand.empty())
+						CALLMOD(sTarget, GetClient(), GetUser(), GetNetwork(), PutModule("Empty /znc command."))
+					else
+						CALLMOD(sTarget, GetClient(), GetUser(), GetNetwork(), OnModCommand(sModCommand))
+				}
+			} else
+				PutIRC(sLine);
 		}
 	}
 

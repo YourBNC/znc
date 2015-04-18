@@ -171,6 +171,7 @@ public:
 	void SetNick(const CString& s);
 	void SetAway(bool bAway) { m_bAway = bAway; }
 	CUser* GetUser() const { return m_pUser; }
+	void SetUser(CUser *pUser) { m_pUser = pUser; }
 	void SetNetwork(CIRCNetwork* pNetwork, bool bDisconnect=true, bool bReconnect=true);
 	CIRCNetwork* GetNetwork() const { return m_pNetwork; }
 	const std::vector<CClient*>& GetClients() const;
