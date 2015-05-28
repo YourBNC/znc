@@ -1,0 +1,49 @@
+*** modules/data/webadmin/tmpl/add_edit_user.tmpl	2015-05-28 18:22:47.188948780 +0200
+--- modules/data/webadmin/tmpl/add_edit_user.tmpl	2015-05-28 18:22:09.608949891 +0200
+***************
+*** 1,3 ****
+  <? AddRow CSSLoop HREF=/modfiles/global/webadmin/webadmin.css ?>
+  <? INC Header.tmpl ?>
+  
+--- 1,4 ----
++ <? AddRow JSLoop HREF=/modfiles/global/webadmin/webadmin.js ?>
+  <? AddRow CSSLoop HREF=/modfiles/global/webadmin/webadmin.css ?>
+  <? INC Header.tmpl ?>
+  
+***************
+*** 126,135 ****
+  		<? IF Edit ?>
+  		<div class="sectionbg">
+  			<div class="sectionbody">
+! 				<table>
+  					<thead>
+  					<tr>
+! 						<td>[<a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>addnetwork?user=<? VAR Username ESC=URL ?>">Add</a>]</td>
+  				<? IF NetworkLoop ?>
+  						<td>Name</td>
+  						<td>Clients</td>
+--- 127,136 ----
+  		<? IF Edit ?>
+  		<div class="sectionbg">
+  			<div class="sectionbody">
+! 				<table class="sortable">
+  					<thead>
+  					<tr>
+! 						<td class="ignore-sort">[<a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>addnetwork?user=<? VAR Username ESC=URL ?>">Add</a>]</td>
+  				<? IF NetworkLoop ?>
+  						<td>Name</td>
+  						<td>Clients</td>
+***************
+*** 353,357 ****
+  		<? ENDIF ?>
+  	</div>
+  </form>
+  
+  <? INC Footer.tmpl ?>
+--- 354,359 ----
+  		<? ENDIF ?>
+  	</div>
+  </form>
++ <script>make_sortable();</script>
+  
+  <? INC Footer.tmpl ?>

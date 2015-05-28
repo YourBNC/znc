@@ -1,0 +1,19 @@
+*** README.md	2015-05-28 18:22:47.188948780 +0200
+--- README.md	2015-05-28 18:22:09.605616558 +0200
+***************
+*** 148,154 ****
+  
+  ## Further infos
+  
+! Please visit http://znc.in/ or #znc on EFNet or freenode if you still have questions.
+  
+  You can get the latest development version with git:
+  	git clone git://github.com/znc/znc.git
+--- 148,154 ----
+  
+  ## Further infos
+  
+! Please visit http://znc.in/ or #znc on freenode if you still have questions.
+  
+  You can get the latest development version with git:
+  	git clone git://github.com/znc/znc.git

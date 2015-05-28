@@ -1,0 +1,24 @@
+<? INC DocType.tmpl ?>
+<? ADDROW CSSLoop HREF=/skinfiles/_default_/bootstrap.min.css ?>
+<? ADDROW CSSLoop HREF=/skinfiles/_default_/font-awesome.min.css ?>
+<? ADDROW JSLoop HREF=/skinfiles/_default_/jquery.min.js ?>
+<? ADDROW JSLoop HREF=/skinfiles/_default_/bootstrap.min.js ?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>YourBNC &mdash; Web Panel</title>
+	<link rel="shortcut icon" href="<? VAR URIPrefix TOP ?>/favicon.ico" type="image/x-icon" />
+	<? LOOP CSSLoop ?>
+	<?IF HREF?><link rel="stylesheet" type="text/css" href="<? VAR URIPrefix TOP ?><? VAR HREF ?>" /><?ENDIF?>
+	<?ENDLOOP?>
+	<? LOOP JSLoop ?>
+	<?IF HREF?><script type="text/javascript" src="<? VAR URIPrefix TOP ?><? VAR HREF ?>"></script><?ENDIF?>
+	<?ENDLOOP?>	
+	 <? INC ExtraHeader.tmpl ?>
+</head>
+<body>
+	<? INC Navbar.tmpl ?>
+	<? INC Banner.tmpl ?>
+	<? INC MessageBar.tmpl ?>
+	<? INC LoginBar.tmpl ?>
+	<? INC BreadCrumbs.tmpl ?>

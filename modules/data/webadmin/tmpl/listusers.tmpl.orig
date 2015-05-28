@@ -1,5 +1,3 @@
-<? AddRow JSLoop HREF=/modfiles/global/webadmin/webadmin.js ?>
-<? AddRow CSSLoop HREF=/modfiles/global/webadmin/webadmin.css ?>
 <? INC Header.tmpl ?>
 
 <div class="container col-md-10 col-md-offset-1">

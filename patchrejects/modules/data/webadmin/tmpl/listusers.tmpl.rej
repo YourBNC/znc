@@ -1,0 +1,41 @@
+*** modules/data/webadmin/tmpl/listusers.tmpl	2015-05-28 18:22:47.188948780 +0200
+--- modules/data/webadmin/tmpl/listusers.tmpl	2015-05-28 18:22:09.608949891 +0200
+***************
+*** 8,17 ****
+  			</div>
+  		<?ELSE?>
+  			<div class="toptable">
+! 				<table>
+  					<thead>
+  					<tr>
+! 						<td>[<a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>adduser">Add</a>]</td>
+  						<td>Username</td>
+                          <td>Networks</td>
+  						<td>Clients</td>
+--- 10,19 ----
+  			</div>
+  		<?ELSE?>
+  			<div class="toptable">
+! 				<table class="sortable">
+  					<thead>
+  					<tr>
+! 						<td class="ignore-sort">[<a href="<? VAR URIPrefix TOP ?><? VAR ModPath TOP ?>adduser">Add</a>]</td>
+  						<td>Username</td>
+                          <td>Networks</td>
+  						<td>Clients</td>
+***************
+*** 36,41 ****
+  					</tbody>
+  				</table>
+  			</div>
+  		<?ENDIF?>
+  
+  <? INC Footer.tmpl ?>
+--- 38,44 ----
+  					</tbody>
+  				</table>
+  			</div>
++ 			<script>make_sortable();</script>
+  		<?ENDIF?>
+  
+  <? INC Footer.tmpl ?>
