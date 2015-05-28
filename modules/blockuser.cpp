@@ -19,7 +19,7 @@
 
 using std::vector;
 
-#define MESSAGE "Your account has been disabled. Contact your administrator."
+#define MESSAGE "Your account has been disabled. Please visit https:\/\/yourbnc.co.uk\/contact.php and contact a staff member."
 
 class CBlockUser : public CModule {
 public:
