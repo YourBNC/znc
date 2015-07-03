@@ -47,8 +47,8 @@ public:
 			if((hent = gethostbyaddr((char *)&(addr.s_addr), sizeof(addr.s_addr), AF_INET))) {
 				char *hostname = (char*) malloc(sizeof(char)*strlen(hent->h_name));
 				strcpy(hostname, hent->h_name);
-				CString str = CString(strdup(hostname));
-				free(hostname);
+				CString str = CString(hostname);
+				//free(hostname);
 				return str;
 			}
 
@@ -56,8 +56,8 @@ public:
 			if((hent = gethostbyaddr((char *)&(addr6.s6_addr), sizeof(addr6.s6_addr), AF_INET6))) {
 				char *hostname = (char*) malloc(sizeof(char)*strlen(hent->h_name));
 				strcpy(hostname, hent->h_name);
-				CString str = CString(strdup(hostname));
-				free(hostname);
+				CString str = CString(hostname);
+				//free(hostname);
 				return str;
 			}
 
