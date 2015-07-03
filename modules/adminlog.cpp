@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-#include <arpa/inet.h>
 #include <znc/FileUtils.h>
 #include <znc/Server.h>
 #include <znc/IRCNetwork.h>
 #include <znc/User.h>
-#include <znc/IRCSock.h>
 
 #include <syslog.h>
 
@@ -35,33 +33,6 @@ public:
 	virtual ~CAdminLogMod() {
 		Log("Logging ended.");
 		closelog();
-	}
-
-	CString ResolveIp(const CString ip)
-	{
-		struct hostent *hent = nullptr;
-		struct in_addr addr;
-		struct in6_addr addr6;
-
-		if(inet_pton(AF_INET, ip.c_str(), &addr))
-			if((hent = gethostbyaddr((char *)&(addr.s_addr), sizeof(addr.s_addr), AF_INET))) {
-				char *hostname = (char*) malloc(sizeof(char)*strlen(hent->h_name));
-				strcpy(hostname, hent->h_name);
-				CString str = CString(hostname);
-				//free(hostname);
-				return str;
-			}
-
-		if(inet_pton(AF_INET6, ip.c_str(), &addr6))
-			if((hent = gethostbyaddr((char *)&(addr6.s6_addr), sizeof(addr6.s6_addr), AF_INET6))) {
-				char *hostname = (char*) malloc(sizeof(char)*strlen(hent->h_name));
-				strcpy(hostname, hent->h_name);
-				CString str = CString(hostname);
-				//free(hostname);
-				return str;
-			}
-
-		return ip;
 	}
 
 	bool OnLoad(const CString & sArgs, CString & sMessage) override {
@@ -82,7 +53,7 @@ public:
 	}
 
 	void OnIRCConnected() override {
-		Log("[" + GetUser()->GetUserName() + "/" + GetNetwork()->GetName() + "] connected to IRC - Host: " + GetNetwork()->GetCurrentServer()->GetName() + " IP: " + CString(GetNetwork()->GetIRCSock()->GetRemoteIP()) + " RDNS: " + ResolveIp(GetNetwork()->GetIRCSock()->GetRemoteIP()));
+		Log("[" + GetUser()->GetUserName() + "/" + GetNetwork()->GetName() + "] connected to IRC: " + GetNetwork()->GetCurrentServer()->GetName());
 	}
 
 	void OnIRCDisconnected() override {
